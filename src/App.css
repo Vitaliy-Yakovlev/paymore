@@ -293,6 +293,13 @@ html, body {
   transform: rotate(180deg);
 }
 
+/* Step 3 Header */
+.paymore-step3-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
 .paymore-content {
   padding: 32px 32px;
   background-color: white;
@@ -863,10 +870,18 @@ html, body {
     height: 18px;
   }
   
-  /* Mobile gap utilities */
-  .mobile\\:gap-0 {
-    gap: 0 !important;
-  }
+/* Step 3 Header */
+.paymore-step3-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+/* Mobile gap utilities */
+.mobile\\:gap-0 {
+  gap: 0 !important;
+}
 }
 
 /* Mobile styles for typography */
@@ -905,6 +920,19 @@ html, body {
     width: 14px;
     height: 14px;
     font-size: 9px;
+  }
+  
+  /* Step 3 Header Mobile */
+  .paymore-step3-header {
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .paymore-step3-header .text-base {
+    text-align: center;
+    font-size: 18px;
+    font-weight: 600;
   }
 }
 

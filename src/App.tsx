@@ -1160,7 +1160,7 @@ export default function App(){
       {step === 3 && (
         <Card>
           <CardHeader>
-            <div className="flex items-start justify-between gap-3">
+            <div className="paymore-step3-header">
               <CardTitle>Review & lock your quote</CardTitle>
               <Badge>{quoteExpired ? 'Quote expired' : `Hold expires in ${mmss(timeLeft)}`}</Badge>
             </div>
