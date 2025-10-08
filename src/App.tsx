@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState, useCallback } from "react"
 import { ChevronRight, ArrowRight, ArrowLeft, Smartphone, Laptop, Gamepad2, Headphones as HeadphonesIcon, Music2, Monitor, Cpu, Keyboard, ScanFace, Camera, Speaker, Mic, Upload, Phone, Info, ArrowUpDown } from "lucide-react";
 import './App.css';
 
+
 /**
  * Pay More Free Quote Shopify Widget — r13.1 PREVIEW (bugfix)
  *
@@ -253,7 +254,7 @@ const CATEGORY_ICON: Record<string,string> = {
 export default function App(){
   const [step, setStep] = useState(1);
   const [mode, setMode] = useState<'sell'|'buy'>('sell');
-  const [category, setCategory] = useState<string>(Object.keys(CATALOG)[0] || 'apple_iphones');
+  const [category, setCategory] = useState<string>('');
   const [subcategory, setSubcategory] = useState('');
   const [selected, setSelected] = useState<any>(null);
 
@@ -261,8 +262,7 @@ export default function App(){
   const [hasCharger, setHasCharger] = useState(false);
   const [hasBox, setHasBox] = useState(false);
   const [battery, setBattery] = useState(90);
-  const [condition, setCondition] = useState<'Like New'|'Good'|'Fair'>('Like New');
-  const [selectedCondition, setSelectedCondition] = useState<string>('');
+  const [condition, setCondition] = useState<'Like New'|'Good'|'Fair'|''>('');
 
   // customer
   const [isBusiness, setIsBusiness] = useState(false);
@@ -305,6 +305,10 @@ export default function App(){
   // 10-minute lock timer
   const [timeLeft, setTimeLeft] = useState(0);
   const [quoteExpired, setQuoteExpired] = useState(false);
+
+  // Validation state
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+  const [highlightCategory, setHighlightCategory] = useState(false);
 
   // start at step 1
   useEffect(() => { setStep(1); setMode('sell'); }, []);
@@ -391,6 +395,146 @@ export default function App(){
     const s = (sec % 60).toString().padStart(2,'0');
     return `${m}:${s}`;
   }
+
+  // Validation functions
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const validatePhone = (phone: string) => {
+    const phoneRegex = /^[+]?[1-9][\d]{0,15}$/;
+    return phoneRegex.test(phone.replace(/[\s\-()]/g, ''));
+  };
+
+  const validateField = (fieldName: string, value: string | number | boolean) => {
+    let error = '';
+    
+    switch (fieldName) {
+      case 'first':
+      case 'last':
+        if (!String(value).trim()) {
+          error = 'This field is required';
+        } else if (String(value).trim().length < 2) {
+          error = 'Must be at least 2 characters';
+        }
+        break;
+      case 'email':
+        if (!String(value).trim()) {
+          error = 'Email is required';
+        } else if (!validateEmail(String(value))) {
+          error = 'Please enter a valid email';
+        }
+        break;
+      case 'phone':
+        if (!String(value).trim()) {
+          error = 'Phone number is required';
+        } else if (!validatePhone(String(value))) {
+          error = 'Please enter a valid phone number';
+        }
+        break;
+      case 'battery':
+        if (typeof value === 'number' && (value < 0 || value > 100)) {
+          error = 'Battery percentage must be between 0 and 100';
+        }
+        break;
+      case 'condition':
+        if (!String(value).trim()) {
+          error = 'Please select a condition';
+        }
+        break;
+      case 'agree':
+        if (!value) {
+          error = 'You must agree to the policies to continue';
+        }
+        break;
+    }
+    
+    setValidationErrors(prev => ({
+      ...prev,
+      [fieldName]: error
+    }));
+    
+    return !error;
+  };
+
+  const getInputClassName = (fieldName: string, value: string | number | boolean) => {
+    const baseClass = 'paymore-input';
+    const error = validationErrors[fieldName];
+    
+    if (error) {
+      return `${baseClass} paymore-input-error`;
+    } else if (String(value).trim()) {
+      return `${baseClass} paymore-input-valid`;
+    } else {
+      return `${baseClass} paymore-input-empty`;
+    }
+  };
+
+  const canProceedToNextStep = () => {
+    if (step === 1) {
+      // Required fields: Category and Search (if user wants to search)
+      // Check if category is not empty and not the placeholder option
+      const hasValidCategory = category && category !== '';
+      return hasValidCategory && (q.trim() || selected);
+    }
+    if (step === 2) {
+      return first.trim() && last.trim() && email.trim() && phone.trim() && 
+             !validationErrors.first && !validationErrors.last && 
+             !validationErrors.email && !validationErrors.phone &&
+             !validationErrors.battery && !validationErrors.condition &&
+             !validationErrors.agree &&
+             // All checkboxes are required to be checked
+             isBusiness !== undefined && hasCharger !== undefined && hasBox !== undefined &&
+             // Agreement checkbox is required
+             agree;
+    }
+    if (step === 3) {
+      return agree && selected && eligible && !quoteExpired;
+    }
+    return false;
+  };
+
+  const handleContinueClick = () => {
+    if (canProceedToNextStep()) {
+      next();
+    } else {
+      // Validate all fields to show red borders
+      if (step === 1) {
+        // For step 1, we'll add validation for category and search
+        if (!category || category === '') {
+          setValidationErrors(prev => ({ ...prev, category: 'Please select a category' }));
+        }
+        if (!q.trim() && !selected) {
+          setValidationErrors(prev => ({ ...prev, search: 'Please enter a search term or select a device' }));
+        }
+      } else if (step === 2) {
+        validateField('first', first);
+        validateField('last', last);
+        validateField('email', email);
+        validateField('phone', phone);
+        validateField('battery', battery);
+        validateField('condition', condition);
+        validateField('agree', agree);
+      }
+    }
+  };
+
+  const handleBrowseModels = () => {
+    // Scroll to top of page
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    
+    // Highlight category input
+    setHighlightCategory(true);
+    
+    // Show list
+    setShowList(true);
+    
+    // Remove highlight after 2 seconds
+    setTimeout(() => {
+      setHighlightCategory(false);
+    }, 2000);
+  };
 
   function buildExportPayload(){
     const eligible = selected ? (Number(selected.buy_min||0) >= MIN_PURCHASE && Number(selected.resale_floor||0) >= MIN_RESALE) : false;
@@ -499,13 +643,14 @@ export default function App(){
 
   function resetAll(){
     setStep(1); setMode('sell');
-    setCategory(Object.keys(CATALOG)[0] || 'apple_iphones'); setSubcategory(''); setSelected(null);
-    setHasCharger(false); setHasBox(false); setBattery(90); setCondition('Like New');
+    setCategory(''); setSubcategory(''); setSelected(null);
+    setHasCharger(false); setHasBox(false); setBattery(90); setCondition('');
     setIsBusiness(false); setBizQty(1); setAgree(false);
     setFirst(''); setLast(''); setEmail(''); setPhone('');
     setModelCode(''); setQ(''); setImei(''); setSerial('');
     setLookup(null); setLookupError(''); setLookupLoading(false);
     setRewardCode('');
+    setValidationErrors({});
   }
 
   async function submit(){
@@ -607,11 +752,22 @@ export default function App(){
             {/* Category */}
             <div className="grid gap-2">
               <Field label="Category">
-                <select value={category} onChange={(e)=> setCategory(e.target.value)} className="paymore-select">
+                <select 
+                  value={category} 
+                  onChange={(e)=> {
+                    setCategory(e.target.value);
+                    if (e.target.value && e.target.value !== '') {
+                      setValidationErrors(prev => ({ ...prev, category: '' }));
+                    }
+                  }} 
+                  className={highlightCategory ? "paymore-select paymore-input-valid" : validationErrors.category ? "paymore-select paymore-input-error" : "paymore-select"}
+                >
+                  <option value="">Select a category</option>
                   {Object.entries(CATALOG).map(([key, cat]: any) => (
                     <option key={key} value={key}>{cat.label || key}</option>
                   ))}
                 </select>
+                {validationErrors.category && <div className="text-xs text-red-600 mt-1">{validationErrors.category}</div>}
               </Field>
               {!!subcatKeys.length && (
                 <Field label="Subcategory">
@@ -622,20 +778,33 @@ export default function App(){
               )}
               <Field label="Search">
                 <div className="flex items-center gap-2">
-                  <input ref={searchRef} value={q} onChange={(e)=> setQ(e.target.value)} placeholder="Try: brand, model, capacity…" className="paymore-input" />
+                  <input 
+                    ref={searchRef} 
+                    value={q} 
+                    onChange={(e)=> {
+                      setQ(e.target.value);
+                      if (e.target.value.trim()) {
+                        setValidationErrors(prev => ({ ...prev, search: '' }));
+                      }
+                    }} 
+                    placeholder="Try: brand, model, capacity…" 
+                    className={validationErrors.search ? "paymore-input paymore-input-error" : "paymore-input"} 
+                  />
                   <Button type="button" variant="outline" onClick={startVoice}><Mic className="h-4 w-4"/> {listening ? 'Listening…' : 'Talk to AI'}</Button>
                 </div>
+                {validationErrors.search && <div className="text-xs text-red-600 mt-1">{validationErrors.search}</div>}
               </Field>
             </div>
 
             {/* Identifier helpers */}
             <div className="grid gap-2">
-              <Field label="Upload Photo or Scan Barcode (optional)">
+              <div className="grid gap-1">
+                <span className="paymore-field-label">Upload Photo or Scan Barcode (optional)</span>
                 <div className="flex items-center gap-2">
                   <input id="pm-file" type="file" accept="image/*" capture="environment" className="hidden" onChange={(e)=> handleImageUpload(e.target.files && e.target.files[0])} />
                   <Button type="button" variant="outline" onClick={()=> (document.getElementById('pm-file') as HTMLInputElement)?.click()}><Upload className="h-4 w-4"/> Upload Photo</Button>
                 </div>
-              </Field>
+              </div>
               <Field label="GTIN / MPN / Model code (optional)">
                 <div className="flex items-center gap-2">
                   <input value={modelCode} onChange={(e)=> setModelCode(e.target.value)} placeholder="UPC/GTIN, MPN, or model code" className="paymore-input"/>
@@ -689,14 +858,14 @@ export default function App(){
                   <h3 className="paymore-category-title">{(CATALOG as any)[category]?.label || 'Selected category'}</h3>
                   <p className="paymore-category-description">Start typing your model or use photo/scan. Eligible items meet Buy ≥ {MIN_PURCHASE} • Resale ≥ {MIN_RESALE}.</p>
                   <div className="paymore-category-button">
-                    <Button type="button" variant="outline" onClick={()=> setShowList(true)}>Browse models</Button>
+                    <Button type="button" variant="outline" onClick={handleBrowseModels}>Browse models</Button>
                   </div>
                 </div>
               </div>
             )}
 
             {/* Device condition grading legend */}
-            <div className="paymore-device-condition-block">
+            {/* <div className="paymore-device-condition-block">
               <div className="paymore-condition-title">Device Condition Guide</div>
               <div className="paymore-condition-items">
                 <div 
@@ -772,7 +941,7 @@ export default function App(){
                   </div>
                 </div>
               </div>
-            </div>
+            </div> */}
 
             {/* Items grid */}
             <div className="grid grid-cols-1 gap-2">
@@ -822,13 +991,18 @@ export default function App(){
                 <Button variant="ghost" onClick={resetAll}><ArrowLeft className="h-4 w-4"/> Reset</Button>
               </div>
               <div className="paymore-button-group-right">
-                <Button variant="outline" onClick={startVoice}><Mic className="h-4 w-4"/> {listening ? 'Listening…' : 'Talk to AI'}</Button>
-                <Button onClick={next}>Continue <ArrowRight className="h-4 w-4"/></Button>
+               {/* <Button variant="outline" onClick={startVoice}><Mic className="h-4 w-4"/> {listening ? 'Listening…' : 'Talk to AI'}</Button> */}
+                <Button 
+                  onClick={handleContinueClick} 
+                  className={canProceedToNextStep() ? "paymore-button-solid" : "paymore-button-solid paymore-button-inactive"}
+                >
+                  Continue <ArrowRight className="h-4 w-4"/>
+                </Button>
               </div>
             </div>
             <div className="paymore-help-section">
               <p className="paymore-help-text">
-                No exact model? <button className="paymore-help-button" onClick={next}>Continue anyway</button> — we'll confirm in store.
+                No exact model? <button className="paymore-help-button" onClick={handleContinueClick}>Continue anyway</button> — we'll confirm in store.
               </p>
             </div>
           </CardContent>
@@ -843,14 +1017,54 @@ export default function App(){
           </CardHeader>
           <CardContent className="grid gap-4">
             <div className="grid grid-cols-2 gap-2">
-              <Field label="First name"><input value={first} onChange={(e)=> setFirst(e.target.value)} className="paymore-input"/></Field>
-              <Field label="Last name"><input value={last} onChange={(e)=> setLast(e.target.value)} className="paymore-input"/></Field>
+              <Field label="First name">
+                <input 
+                  value={first} 
+                  onChange={(e)=> {
+                    setFirst(e.target.value);
+                    validateField('first', e.target.value);
+                  }} 
+                  className={getInputClassName('first', first)}
+                />
+                {validationErrors.first && <div className="text-xs text-red-600 mt-1">{validationErrors.first}</div>}
+              </Field>
+              <Field label="Last name">
+                <input 
+                  value={last} 
+                  onChange={(e)=> {
+                    setLast(e.target.value);
+                    validateField('last', e.target.value);
+                  }} 
+                  className={getInputClassName('last', last)}
+                />
+                {validationErrors.last && <div className="text-xs text-red-600 mt-1">{validationErrors.last}</div>}
+              </Field>
             </div>
             <div className="grid grid-cols-2 gap-2">
-              <Field label="Email"><input value={email} onChange={(e)=> setEmail(e.target.value)} className="paymore-input"/></Field>
-              <Field label="Phone"><input value={phone} onChange={(e)=> setPhone(e.target.value)} className="paymore-input"/></Field>
+              <Field label="Email">
+                <input 
+                  value={email} 
+                  onChange={(e)=> {
+                    setEmail(e.target.value);
+                    validateField('email', e.target.value);
+                  }} 
+                  className={getInputClassName('email', email)}
+                />
+                {validationErrors.email && <div className="text-xs text-red-600 mt-1">{validationErrors.email}</div>}
+              </Field>
+              <Field label="Phone">
+                <input 
+                  value={phone} 
+                  onChange={(e)=> {
+                    setPhone(e.target.value);
+                    validateField('phone', e.target.value);
+                  }} 
+                  className={getInputClassName('phone', phone)}
+                />
+                {validationErrors.phone && <div className="text-xs text-red-600 mt-1">{validationErrors.phone}</div>}
+              </Field>
             </div>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-2 mobile:gap-0">
               <label className="inline-flex items-center gap-2 text-sm"><input type="checkbox" className="paymore-checkbox" checked={isBusiness} onChange={(e)=> setIsBusiness(e.target.checked)} /> Business</label>
               {isBusiness && (
                 <Field label="Quantity (est.)"><input type="number" min={1} max={30} value={bizQty} onChange={(e)=> setBizQty(Number(e.target.value||1))} className="paymore-input"/></Field>
@@ -858,31 +1072,84 @@ export default function App(){
             </div>
             {/* device condition subset */}
             <div className="grid gap-2">
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-2 mobile:gap-0">
                 <label className="inline-flex items-center gap-2 text-sm"><input type="checkbox" className="paymore-checkbox" checked={hasCharger} onChange={(e)=> setHasCharger(e.target.checked)} /> Charger included</label>
                 <label className="inline-flex items-center gap-2 text-sm"><input type="checkbox" className="paymore-checkbox" checked={hasBox} onChange={(e)=> setHasBox(e.target.checked)} /> Box included</label>
               </div>
-              <div className="grid grid-cols-2 gap-2">
-                <Field label="Battery % (if applicable)"><input type="range" min={0} max={100} step={1} value={battery} onChange={(e)=> setBattery(Number(e.target.value))} className="paymore-range"/></Field>
+              <div className="grid grid-cols-1 gap-2 mt-4 mb-4">
+                <Field label="Battery % (if applicable)">
+                  <input 
+                    type="range" 
+                    min={0} 
+                    max={100} 
+                    step={1} 
+                    value={battery} 
+                    onChange={(e)=> {
+                      const newBattery = Number(e.target.value);
+                      setBattery(newBattery);
+                      validateField('battery', newBattery);
+                      // Update CSS custom property for progress
+                      e.target.style.setProperty('--progress', `${newBattery}%`);
+                    }} 
+                    className="paymore-range"
+                    style={{'--progress': `${battery}%`} as React.CSSProperties}
+                  />
+                  <div className="text-xs text-zinc-600 mt-1">Current: {battery}%</div>
+                  {validationErrors.battery && <div className="text-xs text-red-600 mt-1">{validationErrors.battery}</div>}
+                </Field>
                 <Field label="Condition">
-                  <select value={condition} onChange={(e)=> setCondition(e.target.value as any)} className="paymore-select">
-                    <option>Like New</option><option>Good</option><option>Fair</option>
+                  <select 
+                    value={condition} 
+                    onChange={(e)=> {
+                      setCondition(e.target.value as any);
+                      validateField('condition', e.target.value);
+                    }} 
+                    className={validationErrors.condition ? "paymore-select paymore-input-error" : "paymore-select"}
+                  >
+                    <option value="">Select condition</option>
+                    <option value="Like New">Like New</option>
+                    <option value="Good">Good</option>
+                    <option value="Fair">Fair</option>
                   </select>
+                  {validationErrors.condition && <div className="text-xs text-red-600 mt-1">{validationErrors.condition}</div>}
                 </Field>
               </div>
             </div>
             <Field label="4‑digit commission / rewards code (optional)"><input value={rewardCode} maxLength={4} inputMode="numeric" onChange={(e)=> setRewardCode(e.target.value.replace(/\D/g,''))} placeholder="1234" className="paymore-input"/></Field>
             <div className="flex items-center gap-3">
-              <label className="inline-flex items-center gap-2 text-sm"><input type="checkbox" className="paymore-checkbox" checked={agree} onChange={(e)=> setAgree(e.target.checked)} /> I agree to the store’s verification & payout policies.</label>
-              <button type="button" className="paymore-rewards-button" onClick={()=> setShowRewards(true)}>View rewards</button>
+              <label className="inline-flex items-center gap-2 text-sm">
+                <input 
+                  type="checkbox" 
+                  className="paymore-checkbox" 
+                  checked={agree} 
+                  onChange={(e)=> {
+                    setAgree(e.target.checked);
+                    validateField('agree', e.target.checked);
+                  }} 
+                /> 
+                I agree to the store's verification & payout policies.
+              </label>
+              <button 
+                type="button" 
+                className="paymore-rewards-button" 
+                onClick={() => window.open('https://torontodowntownon.paymore.ca/pages/affiliate-program', '_blank')}
+              >
+                View rewards
+              </button>
             </div>
+            {validationErrors.agree && <div className="text-xs text-red-600 mt-1">{validationErrors.agree}</div>}
             <div className="paymore-button-group">
               <div className="paymore-button-group-left">
                 <Button variant="ghost" onClick={back}><ArrowLeft className="h-4 w-4"/> Back</Button>
               </div>
               <div className="paymore-button-group-right">
-                <Button variant="outline" onClick={startVoice}><Mic className="h-4 w-4"/> {listening ? 'Listening…' : 'Talk to AI'}</Button>
-                <Button onClick={next}>Continue <ArrowRight className="h-4 w-4"/></Button>
+               {/*  <Button variant="outline" onClick={startVoice}><Mic className="h-4 w-4"/> {listening ? 'Listening…' : 'Talk to AI'}</Button>*/ }
+                <Button 
+                  onClick={handleContinueClick} 
+                  className={canProceedToNextStep() ? "paymore-button-solid" : "paymore-button-solid paymore-button-inactive"}
+                >
+                  Continue <ArrowRight className="h-4 w-4"/>
+                </Button>
               </div>
             </div>
           </CardContent>
@@ -921,9 +1188,9 @@ export default function App(){
               <div className="font-medium text-zinc-800">{STORE_NAME}</div>
               <div className="text-zinc-600">577 Yonge St #102, Toronto, ON M4Y 1Z2</div>
               <div className="flex items-center gap-3 pt-1">
-                <a href={STORE_GOOGLE_MAPS} target="_blank" rel="noreferrer" className="underline">Open in Google Maps</a>
+                <a href={STORE_GOOGLE_MAPS} target="_blank" rel="noreferrer" className="paymore-rewards-button">Open in Google Maps</a>
                 <span>or</span>
-                <a href={`tel:${PAYMORE_LOCAL_E164}`} className="underline">Call Us {PAYMORE_LOCAL_HUMAN}</a>
+                <a href={`tel:${PAYMORE_LOCAL_E164}`} className="paymore-rewards-button">Call Us {PAYMORE_LOCAL_HUMAN}</a>
               </div>
             </div>
 
@@ -1009,10 +1276,6 @@ function Row({ label, value, muted }: { label: string; value: React.ReactNode; m
       <div className={cn("", muted && "text-zinc-400")}>{value}</div>
     </div>
   );
-}
-
-function Legend({ label, className = "" }: { label: string; className?: string }){
-  return <span className={cn("inline-flex items-center px-3 py-1 rounded-full text-[11px] font-semibold border", className)}>{label}</span>;
 }
 
 // simple spin css (inject once)
