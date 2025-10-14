@@ -1,6 +1,11 @@
 import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { ChevronRight, ArrowRight, ArrowLeft, Smartphone, Laptop, Gamepad2, Headphones as HeadphonesIcon, Music2, Monitor, Cpu, Keyboard, ScanFace, Camera, Speaker, Mic, Upload, Phone, Info, ArrowUpDown } from "lucide-react";
 import './App.css';
+import { SupabaseTest } from './components/SupabaseTest';
+import { SuccessPage } from './components/SuccessPage';
+import { ErrorPage } from './components/ErrorPage';
+import { useCategories } from './hooks/useCategories';
+import { useAuth, useSupabase } from './hooks/useSupabase';
 
 
 /**
@@ -40,8 +45,8 @@ const THANKYOU_URL = (typeof window !== "undefined" && (window as any).PAYMORE_T
 const SOUND_URL = (typeof window !== "undefined" && (window as any).PAYMORE_SOUND_URL) || "/assets/locked-chime.mp3"; // ~3s chime
 const CASH_SOUND_URL = (typeof window !== "undefined" && (window as any).PAYMORE_CASH_SOUND_URL) || "/assets/cash-register.mp3";
 const SOUND_START = (typeof window !== "undefined" && (window as any).PAYMORE_SOUND_START_SEC) || 0; // seconds
-const SOUND_DURATION_MS = (typeof window !== "undefined" && (window as any).PAYMORE_SOUND_DURATION_MS) || 3000;
-const COIN_URL = (typeof window !== "undefined" && (window as any).PAYMORE_COIN_URL) || "/assets/paymore-coin.png";
+// Removed SOUND_DURATION_MS as it's no longer used
+// const COIN_URL = (typeof window !== "undefined" && (window as any).PAYMORE_COIN_URL) || "/assets/paymore-coin.png";
 
 // Barcode Lookup (optional)
 const BARCODELOOKUP_KEY = (typeof window !== "undefined" && (window as any).PAYMORE_BARCODELOOKUP_API_KEY) || null;
@@ -126,97 +131,6 @@ const Money: React.FC<{ amount: number; currency?: string }> = ({ amount, curren
 const ICONS: Record<string, any> = { smartphone: Smartphone, laptop: Laptop, gamepad2: Gamepad2, headphones: HeadphonesIcon, music: Music2, monitor: Monitor, cpu: Cpu, keyboard: Keyboard, scanface: ScanFace, camera: Camera, speaker: Speaker };
 const DeviceIcon: React.FC<{ name?: string }> = ({ name }) => <SafeIcon Comp={ICONS[name || 'smartphone'] || Smartphone} className="h-6 w-6 text-zinc-700" />;
 
-const CATALOG_BASE = {
-  // Phones
-  apple_iphones: { label: "Apple iPhones", items: [
-    { key: 'iphone_15_pro_128', label: 'iPhone 15 Pro 128GB', brand: 'Apple', model: 'A3101', gtin: '', mpn: 'A3101', buy_min: 450, resale_floor: 800, icon: 'smartphone' }
-  ]},
-  android_smartphones: { label: "Android Smartphones", items: [
-    { key: 's24_ultra_256', label: 'Samsung S24 Ultra 256GB', brand: 'Samsung', model: 'SM-S928W', gtin: '', mpn: 'SM-S928W', buy_min: 500, resale_floor: 900, icon: 'smartphone' }
-  ]},
-
-  // MacBooks & laptops
-  apple_macbooks: { label: "Apple MacBooks", subcategories: {
-    macbook_air: { label: 'MacBook Air', items: [
-      { key: 'mba_m2_13_256', label: `MacBook Air 13" M2 256GB (2022)`, brand: 'Apple', model: 'A2681', gtin: '', mpn: 'A2681', buy_min: 700, resale_floor: 1100, icon: 'laptop' },
-    ]},
-    macbook_pro: { label: 'MacBook Pro', items: [
-      { key: 'mbp_14_2021', label: `MacBook Pro 14" (2021)`, brand: 'Apple', model: 'A2442', gtin: '', mpn: 'A2442', buy_min: 900, resale_floor: 1500, icon: 'laptop' },
-    ]},
-  }},
-  laptops: { label: "Laptops", items: [
-    { key: 'dell_xps_13_9310', label: 'Dell XPS 13 (9310)', brand: 'Dell', model: '9310', gtin: '', mpn: '9310', buy_min: 350, resale_floor: 650, icon: 'laptop' },
-  ]},
-
-  // Gaming (separate top-level)
-  gaming_consoles: { label: "Gaming Consoles", items: [
-    { key: 'ps5_disc', label: 'PlayStation 5 (Disc)', brand: 'Sony', model: 'CFI-1215A', gtin: '', mpn: 'CFI-1215A', buy_min: 250, resale_floor: 420, icon: 'gamepad2' },
-    { key: 'xbox_series_x', label: 'Xbox Series X', brand: 'Microsoft', model: 'RRT-00001', gtin: '', mpn: 'RRT-00001', buy_min: 220, resale_floor: 380, icon: 'gamepad2' },
-    { key: 'switch_oled', label: 'Nintendo Switch OLED', brand: 'Nintendo', model: 'HEG-001', gtin: '', mpn: 'HEGSKAAAA', buy_min: 180, resale_floor: 320, icon: 'gamepad2' },
-    { key: 'steam_deck_256', label: 'Steam Deck 256GB', brand: 'Valve', model: 'Steam Deck', gtin: '', mpn: 'V004287-30', buy_min: 220, resale_floor: 380, icon: 'gamepad2' },
-  ]},
-
-  // VR/AR & Streaming
-  vr_ar_streaming: { label: "VR/AR & Streaming", items: [
-    { key: 'meta_quest_2_128', label: 'Meta Quest 2 128GB', brand: 'Meta', model: 'Quest 2', gtin: '', mpn: '899-00183-02', buy_min: 160, resale_floor: 300, icon: 'scanface' },
-    { key: 'vision_pro_256', label: 'Apple Vision Pro 256GB', brand: 'Apple', model: 'A2781', gtin: '', mpn: 'A2781', buy_min: 1800, resale_floor: 3000, icon: 'scanface' },
-    { key: 'roku_stick_4k', label: 'Roku Streaming Stick 4K', brand: 'Roku', model: '3820R', gtin: '', mpn: '3820R', buy_min: 100, resale_floor: 210, icon: 'scanface' }
-  ]},
-
-  // Headphones
-  headphones: { label: "Headphones", items: [
-    { key: 'sony_xm5', label: 'Sony WH-1000XM5', brand: 'Sony', model: 'WH-1000XM5', gtin: '', mpn: 'WH1000XM5/B', buy_min: 120, resale_floor: 260, icon: 'headphones' },
-    { key: 'airpods_pro_2', label: 'AirPods Pro (2nd Gen)', brand: 'Apple', model: 'A2698', gtin: '', mpn: 'A2698', buy_min: 110, resale_floor: 240, icon: 'headphones' },
-    { key: 'logi_g_pro_x', label: 'Logitech G Pro X Gaming Headset', brand: 'Logitech', model: 'G Pro X', gtin: '', mpn: '981-000818', buy_min: 110, resale_floor: 230, icon: 'headphones' }
-  ]},
-
-  // DJ & Audio
-  dj_audio: { label: "DJ & Audio", items: [
-    { key: 'pioneer_ddj_400', label: 'Pioneer DJ DDJ-400 Controller', brand: 'Pioneer DJ', model: 'DDJ-400', gtin: '', mpn: 'DDJ-400', buy_min: 120, resale_floor: 260, icon: 'music' },
-    { key: 'scarlett_2i2_3rd', label: 'Focusrite Scarlett 2i2 3rd Gen', brand: 'Focusrite', model: '2i2 3rd', gtin: '', mpn: 'SCARLETT-2I2-3G', buy_min: 130, resale_floor: 240, icon: 'music' },
-    { key: 'shure_sm58', label: 'Shure SM58 Dynamic Vocal Microphone', brand: 'Shure', model: 'SM58', gtin: '', mpn: 'SM58S', buy_min: 110, resale_floor: 210, icon: 'music' }
-  ]},
-
-  // Desktop All‑in‑Ones
-  desktop_aio: { label: "Desktop All‑in‑Ones", items: [
-    { key: 'hp_pavilion_27_aio', label: 'HP Pavilion 27 All‑in‑One', brand: 'HP', model: 'Pavilion 27 AIO', gtin: '', mpn: '27-AIO-2023', buy_min: 400, resale_floor: 750, icon: 'monitor' },
-    { key: 'dell_inspiron_24_aio', label: 'Dell Inspiron 24 AIO', brand: 'Dell', model: 'Inspiron 24', gtin: '', mpn: '24-5415', buy_min: 250, resale_floor: 430, icon: 'monitor' }
-  ]},
-
-  // PC Cards
-  pc_cards: { label: "PC Cards", items: [
-    { key: 'rtx_3060_12gb', label: 'NVIDIA GeForce RTX 3060 12GB', brand: 'NVIDIA', model: 'RTX 3060 12GB', gtin: '', mpn: 'RTX3060-12G', buy_min: 220, resale_floor: 380, icon: 'cpu' },
-    { key: 'elgato_hd60x', label: 'Elgato HD60 X Capture Card', brand: 'Elgato', model: 'HD60 X', gtin: '', mpn: '10GBE9901', buy_min: 120, resale_floor: 230, icon: 'cpu' },
-    { key: 'creative_ae5', label: 'Creative Sound BlasterX AE-5', brand: 'Creative', model: 'AE-5', gtin: '', mpn: '70SB174000000', buy_min: 110, resale_floor: 220, icon: 'cpu' },
-    { key: 'intel_x520_da2', label: 'Intel X520-DA2 10GbE NIC', brand: 'Intel', model: 'X520-DA2', gtin: '', mpn: 'E10G42BTDA', buy_min: 100, resale_floor: 220, icon: 'cpu' }
-  ]},
-
-  // PC Gear & Accessories
-  pc_gear_accessories: { label: "PC Gear & Accessories", items: [
-    { key: 'logi_mx_keys', label: 'Logitech MX Keys', brand: 'Logitech', model: 'MX Keys', gtin: '', mpn: '920-009295', buy_min: 110, resale_floor: 220, icon: 'keyboard' },
-    { key: 'logi_mx_master_3', label: 'Logitech MX Master 3', brand: 'Logitech', model: 'MX Master 3', gtin: '', mpn: '910-005647', buy_min: 100, resale_floor: 210, icon: 'keyboard' },
-    { key: 'logi_c920', label: 'Logitech C920 HD Pro Webcam', brand: 'Logitech', model: 'C920', gtin: '', mpn: '960-000764', buy_min: 100, resale_floor: 205, icon: 'keyboard' },
-    { key: 'tplink_ax55', label: 'TP‑Link Archer AX55 AX3000 Router', brand: 'TP‑Link', model: 'AX55', gtin: '', mpn: 'AX55', buy_min: 100, resale_floor: 210, icon: 'keyboard' },
-    { key: 'anker_usb_c_dock', label: 'Anker USB‑C Docking Station 11‑in‑1', brand: 'Anker', model: 'A8381', gtin: '', mpn: 'A8381', buy_min: 110, resale_floor: 220, icon: 'keyboard' }
-  ]},
-
-  // Art Monitors & Screens
-  art_monitors_screens: { label: "Art Monitors & Screens", items: [
-    { key: 'benq_pd2700u', label: `BenQ PD2700U 27" 4K Designer Monitor`, brand: 'BenQ', model: 'PD2700U', gtin: '', mpn: 'PD2700U', buy_min: 200, resale_floor: 360, icon: 'monitor' },
-    { key: 'lg_27un850', label: `LG 27UN850 27" 4K IPS`, brand: 'LG', model: '27UN850', gtin: '', mpn: '27UN850-W', buy_min: 160, resale_floor: 300, icon: 'monitor' },
-    { key: 'wacom_cintiq_16', label: 'Wacom Cintiq 16 Pen Display', brand: 'Wacom', model: 'DTK1660K0A', gtin: '', mpn: 'DTK-1660', buy_min: 220, resale_floor: 400, icon: 'monitor' }
-  ]},
-
-  // Cameras & Speakers remain
-  digital_cameras_lenses: { label: "Digital Cameras & Lenses", items: [
-    { key: 'sony_a7iii_body', label: 'Sony A7 III (body)', brand: 'Sony', model: 'ILCE-7M3', gtin: '', mpn: 'ILCE7M3/B', buy_min: 800, resale_floor: 1300, icon: 'camera' }
-  ]},
-  speakers_audio: { label: "Speakers & Audio", items: [
-    { key: 'jbl_flip6', label: 'JBL Flip 6 Portable Speaker', brand: 'JBL', model: 'Flip 6', gtin: '', mpn: 'JBLFLIP6BLK', buy_min: 110, resale_floor: 210, icon: 'speaker' }
-  ]},
-};
-const CATALOG: typeof CATALOG_BASE = (typeof window !== 'undefined' && (window as any).PAYMORE_CATALOG) || CATALOG_BASE as any;
-
 // ---------------- Utilities ----------------
 async function postToSheet(payload: any){
   if (!SHEET_WEBHOOK) return { ok: false, message: 'No webhook configured' };
@@ -232,26 +146,13 @@ function buildBarcodeLookupUrl(code: string){
   return null;
 }
 
-// Category hero icon mapping
-const CATEGORY_ICON: Record<string,string> = {
-  apple_iphones: 'smartphone',
-  android_smartphones: 'smartphone',
-  apple_macbooks: 'laptop',
-  laptops: 'laptop',
-  gaming_consoles: 'gamepad2',
-  vr_ar_streaming: 'scanface',
-  headphones: 'headphones',
-  dj_audio: 'music',
-  desktop_aio: 'monitor',
-  pc_cards: 'cpu',
-  pc_gear_accessories: 'keyboard',
-  art_monitors_screens: 'monitor',
-  digital_cameras_lenses: 'camera',
-  speakers_audio: 'speaker'
-};
-
 // ---------------- Main App ----------------
 export default function App(){
+  // Supabase hooks
+  const { user } = useAuth();
+  const { insertData } = useSupabase();
+  const { categories, subcategories, devices, loading: categoriesLoading, error: categoriesError } = useCategories();
+
   const [step, setStep] = useState(1);
   const [mode, setMode] = useState<'sell'|'buy'>('sell');
   const [category, setCategory] = useState<string>('');
@@ -293,7 +194,9 @@ export default function App(){
   const [showLow, setShowLow] = useState(false);
 
   // celebration + audio
-  const [celebrate, setCelebrate] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [showError, setShowError] = useState(false);
   const [bannerText, setBannerText] = useState('');
   const audioRef = useRef<HTMLAudioElement>(null);
   const cashAudioRef = useRef<HTMLAudioElement>(null);
@@ -314,7 +217,26 @@ export default function App(){
   useEffect(() => { setStep(1); setMode('sell'); }, []);
 
   // handle subcategory defaults
-  const catSpec: any = useMemo(() => (CATALOG as any)[category] || {}, [category]);
+  // Get category data from Supabase
+  const catSpec: any = useMemo(() => {
+    if (!categories.length) return {};
+    const cat = categories.find(c => c.key === category);
+    if (!cat) return {};
+    
+    return {
+      label: cat.label,
+      subcategories: subcategories
+        .filter((sub: any) => sub.category_id === cat.id)
+        .reduce((acc: any, sub: any) => {
+          acc[sub.key] = {
+            label: sub.label,
+            items: devices.filter((d: any) => d.subcategory_id === sub.id)
+          };
+          return acc;
+        }, {}),
+      items: devices.filter((d: any) => d.category_id === cat.id && !d.subcategory_id)
+    };
+  }, [categories, subcategories, devices, category]);
   const subcatKeys = useMemo(() => Object.keys(catSpec.subcategories || {}), [catSpec]);
   useEffect(() => {
     if (subcatKeys.length) setSubcategory(subcatKeys[0]); else setSubcategory('');
@@ -324,21 +246,25 @@ export default function App(){
 
   // items visible
   const items = useMemo(() => {
-    const spec: any = (CATALOG as any)[category] || {};
     let list: any[] = [];
-    if (spec.subcategories && subcategory && spec.subcategories[subcategory]) list = spec.subcategories[subcategory].items || [];
-    else list = spec.items || [];
+    if (catSpec.subcategories && subcategory && catSpec.subcategories[subcategory]) {
+      list = catSpec.subcategories[subcategory].items || [];
+    } else {
+      list = catSpec.items || [];
+    }
     const minGated = (list || []).filter(d => Number(d.buy_min||0) >= MIN_PURCHASE && Number(d.resale_floor||0) >= MIN_RESALE);
     const query = q.trim().toLowerCase();
     if (!query) return minGated;
     return minGated.filter(d => [d.label, d.brand, d.model].filter(Boolean).join(' ').toLowerCase().includes(query));
-  }, [category, subcategory, q]);
+  }, [catSpec, subcategory, q]);
 
   const lowMatches = useMemo(() => {
-    const spec: any = (CATALOG as any)[category] || {};
     let list: any[] = [];
-    if (spec.subcategories && subcategory && spec.subcategories[subcategory]) list = spec.subcategories[subcategory].items || [];
-    else list = spec.items || [];
+    if (catSpec.subcategories && subcategory && catSpec.subcategories[subcategory]) {
+      list = catSpec.subcategories[subcategory].items || [];
+    } else {
+      list = catSpec.items || [];
+    }
     const query = q.trim().toLowerCase();
     const lows = (list || []).filter((d: any) => {
       const match = !query || [d.label, d.brand, d.model].filter(Boolean).join(' ').toLowerCase().includes(query);
@@ -346,7 +272,7 @@ export default function App(){
       return match && !ok;
     });
     return lows;
-  }, [category, subcategory, q]);
+  }, [catSpec, subcategory, q]);
 
   // payout
   const payout = useMemo(() => {
@@ -638,7 +564,22 @@ export default function App(){
     r.start();
   }
 
-  function next(){ setStep(s => Math.min(3, s + 1)); }
+  function next(){ 
+    // Validate current step before proceeding
+    if (step === 2) {
+      // Validate step 2 fields
+      validateField('battery', battery);
+      validateField('condition', condition);
+      
+      // Check if validation passed
+      const hasErrors = validationErrors.battery || validationErrors.condition;
+      if (hasErrors) {
+        return; // Don't proceed if there are errors
+      }
+    }
+    
+    setStep(s => Math.min(3, s + 1)); 
+  }
   function back(){ setStep(s => Math.max(1, s - 1)); }
 
   function resetAll(){
@@ -654,23 +595,99 @@ export default function App(){
   }
 
   async function submit(){
+    setIsSubmitting(true);
     const payload = buildExportPayload();
-    if (!SHEET_WEBHOOK) {
-      // Fallback: download sample JSON for testing
-      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob); const a = document.createElement('a');
-      a.href = url; a.download = 'paymore_quote_sample.json'; a.click(); URL.revokeObjectURL(url);
-    } else {
-      await postToSheet(payload);
+    
+    // Save quote to Supabase
+    let supabaseSuccess = false;
+    try {
+      await insertData('quotes', {
+        // Main quote information
+        store: payload.store,
+        mode: payload.mode,
+        category: payload.category,
+        subcategory: payload.subcategory,
+        
+        // Device information
+        device_name: payload.device_label || payload.barcode_lookup?.title || null,
+        brand: payload.brand || payload.barcode_lookup?.brand || null,
+        model: payload.model || payload.barcode_lookup?.model || null,
+        model_code: payload.model_code_entered || payload.barcode_lookup?.mpn || null,
+        
+        // Device details
+        condition: payload.details.condition || null,
+        battery_percentage: payload.details.battery || null,
+        has_original_box: payload.details.hasBox || false,
+        has_original_charger: payload.details.hasCharger || false,
+        
+        // Identifiers
+        imei: payload.identifiers.imei || null,
+        serial_number: payload.identifiers.serial || null,
+        
+        // Price and eligibility
+        quote_amount: payload.quote_cad || null,
+        is_eligible: payload.thresholds.eligible || false,
+        buy_min_threshold: payload.thresholds.MIN_PURCHASE,
+        resale_floor_threshold: payload.thresholds.MIN_RESALE,
+        
+        // Customer information
+        customer_first_name: payload.customer.first || null,
+        customer_last_name: payload.customer.last || null,
+        customer_email: payload.customer.email || null,
+        customer_phone: payload.customer.phone || null,
+        is_business_customer: payload.customer.isBusiness || false,
+        business_quantity: payload.customer.bizQty || 1,
+        
+        // Barcode lookup information
+        barcode: payload.barcode_lookup?.barcode || null,
+        barcode_title: payload.barcode_lookup?.title || null,
+        
+        // Rewards
+        rewards_code: payload.rewards.code || null,
+        
+        // Metadata
+        user_id: user?.id || null,
+        created_at: new Date().toISOString(),
+        status: 'pending'
+      });
+      console.log('Quote saved to Supabase successfully');
+      supabaseSuccess = true;
+    } catch (error) {
+      console.error('Error saving to Supabase:', error);
+      supabaseSuccess = false;
     }
+    
+    // Fallback only if Supabase failed
+    if (!supabaseSuccess) {
+      if (!SHEET_WEBHOOK) {
+        // Fallback: download sample JSON for testing
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob); const a = document.createElement('a');
+        a.href = url; a.download = 'paymore_quote_sample.json'; a.click(); URL.revokeObjectURL(url);
+      } else {
+        await postToSheet(payload);
+      }
+    }
+    
+    // Show result screen
+    setIsSubmitting(false);
+    if (supabaseSuccess) {
+      setShowSuccess(true);
+    } else {
+      setShowError(true);
+    }
+    
     // Reward sequence
-    setBannerText('Your cash payment has been locked down for 24 hours.');
-    setCelebrate(true);
+    if (supabaseSuccess) {
+      setBannerText('Your quote has been saved successfully! Cash payment locked for 24 hours.');
+    } else {
+      setBannerText('Your cash payment has been locked down for 24 hours.');
+    }
     try {
       if (audioRef.current) { audioRef.current.currentTime = SOUND_START; await audioRef.current.play(); }
       setTimeout(() => { if (cashAudioRef.current) cashAudioRef.current.play().catch(()=>{}); }, 400);
     } catch {}
-    setTimeout(() => { if (typeof window !== 'undefined') window.location.assign(THANKYOU_URL); }, SOUND_DURATION_MS + 800);
+    // Removed automatic redirect - user stays on success/error page
   }
 
   // const canContinue = useMemo(() => {
@@ -682,16 +699,42 @@ export default function App(){
 
   const summaryMuted = step < 3;
 
+  // Show loading screen
+  if (isSubmitting) {
+    return (
+      <div className="fixed inset-0 z-50 bg-white/80 backdrop-blur-sm flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-16 h-16 border-4 border-green-200 border-t-green-500 rounded-full animate-spin"></div>
+          <p className="text-gray-600 font-medium">Processing your quote...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show success screen
+  if (showSuccess) {
+    return (
+      <SuccessPage 
+        onGoBack={() => window.location.assign(THANKYOU_URL)} 
+      />
+    );
+  }
+
+  // Show error screen
+  if (showError) {
+    return (
+      <ErrorPage 
+        onTryAgain={() => {
+          setShowError(false);
+          setStep(1);
+        }} 
+      />
+    );
+  }
+
   return (
     <Shell>
-      {/* Celebration overlay */}
-      {celebrate && (
-        <div className="fixed inset-0 z-50 pointer-events-none">
-          <div className="absolute inset-0 flex items-center justify-center">
-            <img src={COIN_URL} alt="PayMore coin" className="h-28 w-28 animate-spin-slow drop-shadow-xl" />
-          </div>
-        </div>
-      )}
+      <SupabaseTest />
       <audio ref={audioRef} src={SOUND_URL} preload="auto" />
       <audio ref={cashAudioRef} src={CASH_SOUND_URL} preload="auto" />
 
@@ -761,13 +804,15 @@ export default function App(){
                     }
                   }} 
                   className={highlightCategory ? "paymore-select paymore-input-valid" : validationErrors.category ? "paymore-select paymore-input-error" : "paymore-select"}
+                  disabled={categoriesLoading}
                 >
-                  <option value="">Select a category</option>
-                  {Object.entries(CATALOG).map(([key, cat]: any) => (
-                    <option key={key} value={key}>{cat.label || key}</option>
+                  <option value="">{categoriesLoading ? "Loading categories..." : "Select a category"}</option>
+                  {categories.map((cat) => (
+                    <option key={cat.key} value={cat.key}>{cat.label}</option>
                   ))}
                 </select>
                 {validationErrors.category && <div className="text-xs text-red-600 mt-1">{validationErrors.category}</div>}
+                {categoriesError && <div className="text-xs text-red-600 mt-1">Error loading categories: {categoriesError}</div>}
               </Field>
               {!!subcatKeys.length && (
                 <Field label="Subcategory">
@@ -838,8 +883,8 @@ export default function App(){
               )}
             </div>
 
-            {/* Category hero when list is hidden */}
-            {!q.trim() && !showList && (
+            {/* Category hero when list is hidden and no category selected */}
+            {!q.trim() && !showList && !category && (
               <div className="paymore-category-hero">
                 <div className="paymore-category-icon">
                   <img 
@@ -855,7 +900,7 @@ export default function App(){
                   />
                 </div>
                 <div className="paymore-category-content">
-                  <h3 className="paymore-category-title">{(CATALOG as any)[category]?.label || 'Selected category'}</h3>
+                  <h3 className="paymore-category-title">{catSpec.label || 'Selected category'}</h3>
                   <p className="paymore-category-description">Start typing your model or use photo/scan. Eligible items meet Buy ≥ {MIN_PURCHASE} • Resale ≥ {MIN_RESALE}.</p>
                   <div className="paymore-category-button">
                     <Button type="button" variant="outline" onClick={handleBrowseModels}>Browse models</Button>
@@ -945,11 +990,11 @@ export default function App(){
 
             {/* Items grid */}
             <div className="grid grid-cols-1 gap-2">
-              {(showList || q.trim()) && items.map((d: any) => (
+              {(showList || q.trim() || category) && items.map((d: any) => (
                 <button key={d.key} onClick={()=> setSelected(d)} className={cn("flex items-center justify-between rounded-xl border px-3 py-3 text-left",
                   selected?.key===d.key ? "border-emerald-400 bg-emerald-50" : "border-zinc-200 hover:bg-zinc-50")}> 
                   <div className="flex items-center gap-3">
-                    <DeviceIcon name={d.icon||CATEGORY_ICON[category]||'smartphone'} />
+                    <DeviceIcon name={d.icon || (categories.find(c => c.key === category)?.icon) || 'smartphone'} />
                     <div>
                       <div className="text-sm font-medium text-zinc-900">{d.label}</div>
                       <div className="text-xs text-zinc-500">Buy floor <Money amount={d.buy_min}/> • Resale floor <Money amount={d.resale_floor}/></div>
@@ -958,7 +1003,7 @@ export default function App(){
                   <ArrowRight className="h-4 w-4 text-zinc-400" />
                 </button>
               ))}
-              {((showList || q.trim()) && !items.length) && (
+              {((showList || q.trim() || category) && !items.length) && (
                 lowMatches.length > 0 ? (
                   <div className="rounded-lg border border-orange-200 bg-orange-50 p-3 text-xs text-orange-800">
                     We found matches below our minimums. You can still select one to Donate or Recycle.
@@ -968,12 +1013,12 @@ export default function App(){
                   <div className="text-xs text-zinc-500">No matches at this time. Try a different search or category.</div>
                 )
               )}
-              {showLow && (
+              {showLow && category && (
                 <div className="grid grid-cols-1 gap-2">
                   {lowMatches.map((d: any) => (
                     <button key={d.key} onClick={()=> setSelected(d)} className="flex items-center justify-between rounded-xl border px-3 py-3 text-left border-red-200 bg-red-50"> 
                       <div className="flex items-center gap-3">
-                        <DeviceIcon name={d.icon||CATEGORY_ICON[category]||'smartphone'} />
+                        <DeviceIcon name={d.icon || (categories.find(c => c.key === category)?.icon) || 'smartphone'} />
                         <div>
                           <div className="text-sm font-medium text-zinc-900">{d.label}</div>
                           <div className="text-xs text-red-700">Below minimums — Donate or Recycle</div>
@@ -1199,7 +1244,7 @@ export default function App(){
                 <Button variant="ghost" onClick={back}><ArrowLeft className="h-4 w-4"/> Back</Button>
               </div>
               <div className="paymore-button-group-right">
-                <Button onClick={submit} disabled={!agree || !selected || !eligible || quoteExpired}>Lock my quote</Button>
+                <Button onClick={submit} disabled={!agree || !selected || !eligible || quoteExpired || !condition}>Lock my quote</Button>
               </div>
             </div>
           </CardContent>
