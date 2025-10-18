@@ -6,6 +6,7 @@ import { SuccessPage } from './components/SuccessPage';
 import { ErrorPage } from './components/ErrorPage';
 import { useCategories } from './hooks/useCategories';
 import { useAuth, useSupabase } from './hooks/useSupabase';
+import { getPriceForDevice } from './utils/priceListService';
 
 
 /**
@@ -131,6 +132,41 @@ const Money: React.FC<{ amount: number; currency?: string }> = ({ amount, curren
 const ICONS: Record<string, any> = { smartphone: Smartphone, laptop: Laptop, gamepad2: Gamepad2, headphones: HeadphonesIcon, music: Music2, monitor: Monitor, cpu: Cpu, keyboard: Keyboard, scanface: ScanFace, camera: Camera, speaker: Speaker };
 const DeviceIcon: React.FC<{ name?: string }> = ({ name }) => <SafeIcon Comp={ICONS[name || 'smartphone'] || Smartphone} className="h-6 w-6 text-zinc-700" />;
 
+// Component for displaying device image with fallback
+const DeviceImage: React.FC<{ 
+  imageUrl?: string; 
+  icon?: string; 
+  categoryIcon?: string; 
+  size?: 'small' | 'medium' | 'large';
+}> = ({ imageUrl, icon, categoryIcon, size = 'medium' }) => {
+  const [imageError, setImageError] = useState(false);
+  
+  const sizeClass = size === 'small' ? 'device-image-small' : 
+                   size === 'large' ? 'device-image-large' : 
+                   'device-image-medium';
+  
+  if (imageUrl && !imageError) {
+    return (
+      <div className={`device-image-container ${sizeClass}`}>
+        <img 
+          src={imageUrl} 
+          alt="Device" 
+          className="device-image"
+          onError={() => setImageError(true)}
+          onLoad={() => setImageError(false)}
+        />
+      </div>
+    );
+  }
+  
+  // Fallback to icon
+  return (
+    <div className={`device-image-container fallback ${sizeClass}`}>
+      <DeviceIcon name={icon || categoryIcon || 'smartphone'} />
+    </div>
+  );
+};
+
 // ---------------- Utilities ----------------
 async function postToSheet(payload: any){
   if (!SHEET_WEBHOOK) return { ok: false, message: 'No webhook configured' };
@@ -164,6 +200,7 @@ export default function App(){
   const [hasBox, setHasBox] = useState(false);
   const [battery, setBattery] = useState(90);
   const [condition, setCondition] = useState<'Like New'|'Good'|'Fair'|''>('');
+  const [unlocked, setUnlocked] = useState(true); // Add unlocked state
 
   // customer
   const [isBusiness, setIsBusiness] = useState(false);
@@ -274,19 +311,73 @@ export default function App(){
     return lows;
   }, [catSpec, subcategory, q]);
 
-  // payout
-  const payout = useMemo(() => {
-    if (!selected || mode !== 'sell') return 0;
-    let base = Number(selected.buy_min||0);
-    if (battery < 85) base -= 50;
-    if (battery >= 95) base += 20;
-    if (condition === 'Good') base -= 40;
-    if (condition === 'Fair') base -= 120;
-    if (hasCharger) base += 10;
-    if (hasBox) base += 10;
-    if (isBusiness) base *= Math.max(1, Math.min(30, bizQty));
-    return Math.max(base, 0);
-  }, [selected, mode, battery, condition, hasCharger, hasBox, isBusiness, bizQty]);
+  // payout calculation using the new offer calculator logic
+  const [payout, setPayout] = useState(0);
+  
+  useEffect(() => {
+    const calculatePayout = async () => {
+      if (!selected || mode !== 'sell') {
+        setPayout(0);
+        return;
+      }
+      
+      try {
+        // Map condition to the correct format
+        let conditionType: 'Excellent' | 'Good' | 'Fair' = 'Excellent';
+        if (condition === 'Good') conditionType = 'Good';
+        else if (condition === 'Fair') conditionType = 'Fair';
+        
+        // Use the first available storage option if storage is not set
+        const storageToUse = selected.storage || 
+                            (selected.storageOptions && selected.storageOptions.length > 0 ? selected.storageOptions[0] : '128GB');
+        
+        // Get price from database using the new calculator
+        console.log('Calculating payout for:', {
+          deviceName: selected.label || selected.model || 'iPhone',
+          storage: selected.storage,
+          storageOptions: selected.storageOptions,
+          storageToUse: storageToUse,
+          condition: conditionType,
+          hasBox,
+          hasCharger,
+          unlocked,
+          battery,
+          selected: selected
+        });
+        
+        const priceResult = await getPriceForDevice(
+          selected.label || selected.model || 'iPhone', // device name
+          storageToUse, // storage - use first available option
+          conditionType,
+          hasBox, // original box
+          hasCharger, // original charger
+          unlocked, // unlocked
+          battery // battery percentage
+        );
+        
+        console.log('Price result:', priceResult);
+        
+        if (!priceResult) {
+          setPayout(0);
+          return;
+        }
+        
+        let finalOffer = priceResult.final_price || 0;
+        
+        // Apply business quantity multiplier if applicable
+        if (isBusiness) {
+          finalOffer *= Math.max(1, Math.min(30, bizQty));
+        }
+        
+        setPayout(Math.max(finalOffer, 0));
+      } catch (error) {
+        console.error('Error calculating payout:', error);
+        setPayout(0);
+      }
+    };
+    
+    calculatePayout();
+  }, [selected, mode, battery, condition, hasCharger, hasBox, unlocked, isBusiness, bizQty]);
 
   const eligible = useMemo(()=> selected ? (Number(selected.buy_min||0) >= MIN_PURCHASE && Number(selected.resale_floor||0) >= MIN_RESALE) : false, [selected]);
 
@@ -478,7 +569,7 @@ export default function App(){
       model_code_entered: modelCode || null,
       thresholds: { MIN_PURCHASE, MIN_RESALE, eligible },
       pricing: { buy_min: selected?.buy_min || null, resale_floor: selected?.resale_floor || null },
-      details: { battery, condition, hasCharger, hasBox },
+      details: { battery, condition, hasCharger, hasBox, unlocked },
       identifiers: { imei: imei || null, serial: serial || null },
       barcode_lookup: lookup ? {
         barcode: lookup.barcode || null,
@@ -619,6 +710,7 @@ export default function App(){
         battery_percentage: payload.details.battery || null,
         has_original_box: payload.details.hasBox || false,
         has_original_charger: payload.details.hasCharger || false,
+        unlocked: payload.details.unlocked || true,
         
         // Identifiers
         imei: payload.identifiers.imei || null,
@@ -994,7 +1086,12 @@ export default function App(){
                 <button key={d.key} onClick={()=> setSelected(d)} className={cn("flex items-center justify-between rounded-xl border px-3 py-3 text-left",
                   selected?.key===d.key ? "border-emerald-400 bg-emerald-50" : "border-zinc-200 hover:bg-zinc-50")}> 
                   <div className="flex items-center gap-3">
-                    <DeviceIcon name={d.icon || (categories.find(c => c.key === category)?.icon) || 'smartphone'} />
+                    <DeviceImage 
+                      imageUrl={d.device_image} 
+                      icon={d.icon} 
+                      categoryIcon={categories.find(c => c.key === category)?.icon}
+                      size="medium"
+                    />
                     <div>
                       <div className="text-sm font-medium text-zinc-900">{d.label}</div>
                       <div className="text-xs text-zinc-500">Buy floor <Money amount={d.buy_min}/> • Resale floor <Money amount={d.resale_floor}/></div>
@@ -1018,7 +1115,12 @@ export default function App(){
                   {lowMatches.map((d: any) => (
                     <button key={d.key} onClick={()=> setSelected(d)} className="flex items-center justify-between rounded-xl border px-3 py-3 text-left border-red-200 bg-red-50"> 
                       <div className="flex items-center gap-3">
-                        <DeviceIcon name={d.icon || (categories.find(c => c.key === category)?.icon) || 'smartphone'} />
+                        <DeviceImage 
+                          imageUrl={d.device_image} 
+                          icon={d.icon} 
+                          categoryIcon={categories.find(c => c.key === category)?.icon}
+                          size="medium"
+                        />
                         <div>
                           <div className="text-sm font-medium text-zinc-900">{d.label}</div>
                           <div className="text-xs text-red-700">Below minimums — Donate or Recycle</div>
@@ -1121,6 +1223,9 @@ export default function App(){
                 <label className="inline-flex items-center gap-2 text-sm"><input type="checkbox" className="paymore-checkbox" checked={hasCharger} onChange={(e)=> setHasCharger(e.target.checked)} /> Charger included</label>
                 <label className="inline-flex items-center gap-2 text-sm"><input type="checkbox" className="paymore-checkbox" checked={hasBox} onChange={(e)=> setHasBox(e.target.checked)} /> Box included</label>
               </div>
+              <div className="grid grid-cols-1 gap-2 mt-2">
+                <label className="inline-flex items-center gap-2 text-sm"><input type="checkbox" className="paymore-checkbox" checked={unlocked} onChange={(e)=> setUnlocked(e.target.checked)} /> Device is unlocked</label>
+              </div>
               <div className="grid grid-cols-1 gap-2 mt-4 mb-4">
                 <Field label="Battery % (if applicable)">
                   <input 
@@ -1213,12 +1318,24 @@ export default function App(){
           </CardHeader>
           <CardContent className="grid gap-4">
             <div className="grid gap-1">
-              <Row label="Item" value={selected?.label || '—'} muted={summaryMuted} />
+              <div className="flex items-center gap-3 p-2 rounded-lg bg-zinc-50">
+                <DeviceImage 
+                  imageUrl={selected?.device_image} 
+                  icon={selected?.icon} 
+                  categoryIcon={categories.find(c => c.key === category)?.icon}
+                  size="large"
+                />
+                <div>
+                  <div className="font-medium text-zinc-900">{selected?.label || '—'}</div>
+                  <div className="text-sm text-zinc-500">{selected?.brand} • {selected?.storage}</div>
+                </div>
+              </div>
               <Row label="Buy floor" value={<Money amount={selected?.buy_min || 0} />} muted={summaryMuted} />
               <Row label="Resale floor" value={<Money amount={selected?.resale_floor || 0} />} muted={summaryMuted} />
               <Row label="Battery" value={`${battery}%`} muted={summaryMuted} />
               <Row label="Condition" value={`${condition}`} muted={summaryMuted} />
               <Row label="Charger / Box" value={`${hasCharger ? 'Yes' : 'No'} • ${hasBox ? 'Yes' : 'No'}`} muted={summaryMuted} />
+              <Row label="Unlocked" value={`${unlocked ? 'Yes' : 'No'}`} muted={summaryMuted} />
               <Row label="IMEI" value={`${imei || '—'}`} muted={summaryMuted} />
               <Row label="Serial" value={`${serial || '—'}`} muted={summaryMuted} />
               <Row label="Estimated payout" value={<Money amount={payout} />} muted={false} />

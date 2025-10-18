@@ -10,64 +10,87 @@ export interface Database {
       price_list: {
         Row: {
           id: number
+          device_key: string
           device_name: string
           brand: string
+          model: string
           storage: string
-          original_box: boolean | null
-          original_charger: boolean | null
-          unlocked: boolean | null
-          battery_low: string | null
-          battery_medium: string | null
-          battery_good: string | null
-          battery_perfect: string | null
-          condition: 'Excellent' | 'Good' | 'Fair' | null
-          sale_price: number | null
-          paymore_margin: number | null
-          shipping: number | null
-          no_box_deduction: number | null
-          no_charger_deduction: number | null
+          gtin: string | null
+          mpn: string | null
+          sale_price: number
+          buy_min: number | null
+          resale_floor: number | null
+          category_id: number | null
+          subcategory_id: number | null
+          icon: string | null
+          device_image: string | null
+          is_active: boolean | null
           created_at: string | null
           updated_at: string | null
         }
         Insert: {
           id?: number
+          device_key: string
           device_name: string
           brand: string
+          model: string
           storage: string
-          original_box?: boolean | null
-          original_charger?: boolean | null
-          unlocked?: boolean | null
-          battery_low?: string | null
-          battery_medium?: string | null
-          battery_good?: string | null
-          battery_perfect?: string | null
-          condition?: 'Excellent' | 'Good' | 'Fair' | null
-          sale_price?: number | null
-          paymore_margin?: number | null
-          shipping?: number | null
-          no_box_deduction?: number | null
-          no_charger_deduction?: number | null
+          gtin?: string | null
+          mpn?: string | null
+          sale_price: number
+          buy_min?: number | null
+          resale_floor?: number | null
+          category_id?: number | null
+          subcategory_id?: number | null
+          icon?: string | null
+          device_image?: string | null
+          is_active?: boolean | null
           created_at?: string | null
           updated_at?: string | null
         }
         Update: {
           id?: number
+          device_key?: string
           device_name?: string
           brand?: string
+          model?: string
           storage?: string
-          original_box?: boolean | null
-          original_charger?: boolean | null
-          unlocked?: boolean | null
-          battery_low?: string | null
-          battery_medium?: string | null
-          battery_good?: string | null
-          battery_perfect?: string | null
-          condition?: 'Excellent' | 'Good' | 'Fair' | null
-          sale_price?: number | null
-          paymore_margin?: number | null
-          shipping?: number | null
-          no_box_deduction?: number | null
-          no_charger_deduction?: number | null
+          gtin?: string | null
+          mpn?: string | null
+          sale_price?: number
+          buy_min?: number | null
+          resale_floor?: number | null
+          category_id?: number | null
+          subcategory_id?: number | null
+          icon?: string | null
+          device_image?: string | null
+          is_active?: boolean | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+      }
+      offer_settings: {
+        Row: {
+          id: number
+          setting_key: string
+          setting_value: number | null
+          description: string | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: number
+          setting_key: string
+          setting_value: number | null
+          description?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: number
+          setting_key?: string
+          setting_value?: number | null
+          description?: string | null
           created_at?: string | null
           updated_at?: string | null
         }

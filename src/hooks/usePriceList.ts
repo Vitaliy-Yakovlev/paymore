@@ -35,7 +35,9 @@ export const usePriceList = () => {
     storage: string,
     condition: 'Excellent' | 'Good' | 'Fair',
     originalBox: boolean = true,
-    originalCharger: boolean = true
+    originalCharger: boolean = true,
+    unlocked: boolean = true,
+    batteryPercentage?: number
   ): Promise<PriceResult | null> => {
     setLoading(true);
     setError(null);
@@ -46,7 +48,9 @@ export const usePriceList = () => {
         storage,
         condition,
         originalBox,
-        originalCharger
+        originalCharger,
+        unlocked,
+        batteryPercentage
       );
       return result;
     } catch (err) {
