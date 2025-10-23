@@ -1,13 +1,12 @@
 import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { ChevronRight, ArrowRight, ArrowLeft, Smartphone, Laptop, Gamepad2, Headphones as HeadphonesIcon, Music2, Monitor, Cpu, Keyboard, ScanFace, Camera, Speaker, Mic, Upload, Phone, Info, ArrowUpDown } from "lucide-react";
 import './App.css';
-import { SupabaseTest } from './components/SupabaseTest';
 import { SuccessPage } from './components/SuccessPage';
 import { ErrorPage } from './components/ErrorPage';
 import { useCategories } from './hooks/useCategories';
 import { useAuth, useSupabase } from './hooks/useSupabase';
 import { getPriceForDevice } from './utils/priceListService';
-
+import confetti from "canvas-confetti";
 
 /**
  * Pay More Free Quote Shopify Widget — r13.1 PREVIEW (bugfix)
@@ -252,6 +251,20 @@ export default function App(){
 
   // start at step 1
   useEffect(() => { setStep(1); setMode('sell'); }, []);
+
+  // Confetti animation
+  const makeShot = (particleRatio: number, opts: any): void => {
+    const config = {...opts, origin: { y: 0.7 }, particleCount: Math.floor(200 * particleRatio)};
+    confetti(config);
+  };
+
+  const launchConfetti = (): void => {
+    makeShot(0.25, {spread: 26, startVelocity: 55});
+    makeShot(0.2, {spread: 60});
+    makeShot(0.35, {spread: 100, decay: 0.91, scalar: 0.8});
+    makeShot(0.1, {spread: 120, startVelocity: 25, decay: 0.92, scalar: 1.2});
+    makeShot(0.1, {spread: 120, startVelocity: 45});
+  };
 
   // handle subcategory defaults
   // Get category data from Supabase
@@ -765,6 +778,7 @@ export default function App(){
     setIsSubmitting(false);
     if (supabaseSuccess) {
       setShowSuccess(true);
+      launchConfetti();
     } else {
       setShowError(true);
     }
@@ -826,7 +840,6 @@ export default function App(){
 
   return (
     <Shell>
-      <SupabaseTest />
       <audio ref={audioRef} src={SOUND_URL} preload="auto" />
       <audio ref={cashAudioRef} src={CASH_SOUND_URL} preload="auto" />
 
