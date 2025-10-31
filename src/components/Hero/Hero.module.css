@@ -1,0 +1,33 @@
+.hero {
+  background-image: url('../../img/bg-hero.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  height: 129px;
+  max-width: 1920px;
+  margin-bottom: 32px;
+}
+
+@media screen and (min-device-pixel-ratio: 2), screen and (min-resolution: 192dpi), screen and (min-resolution: 2dppx) {
+  .hero {
+    background-image: url('../../img/bg-hero2x.png');
+  }
+}
+.title {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  color: #050505;
+  text-align: center;
+  font-family: Inter;
+  font-size: 24px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 30px;
+  margin: 0;
+  padding: 31px 0 36px 0;
+}
+
+.titleBold {
+  font-weight: 700;
+}

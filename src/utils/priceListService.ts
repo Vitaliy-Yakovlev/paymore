@@ -9,9 +9,7 @@ type PriceListUpdate = Database['public']['Tables']['price_list']['Update'];
 // Get global offer settings
 export const getOfferSettings = async (): Promise<Record<string, number>> => {
   try {
-    const { data, error } = await supabase
-      .from('offer_settings')
-      .select('setting_key, setting_value');
+    const { data, error } = await supabase.from('offer_settings').select('setting_key, setting_value');
 
     if (error) {
       console.error('Error fetching offer settings:', error);
@@ -83,9 +81,7 @@ export const searchPrices = async (params: PriceSearchParams): Promise<PriceResu
     }
 
     // Calculate final price for each result
-    const results = await Promise.all(
-      data.map((item: PriceListItem) => calculateFinalPrice(item, params))
-    );
+    const results = await Promise.all(data.map((item: PriceListItem) => calculateFinalPrice(item, params)));
     return results;
   } catch (error) {
     console.error('Error in searchPrices:', error);
@@ -96,7 +92,7 @@ export const searchPrices = async (params: PriceSearchParams): Promise<PriceResu
 // Apply battery percentage deductions according to the specification
 export const applyBatteryDeduction = (offer: number, batteryPercentage: number): number => {
   let batteryMultiplier = 1.0;
-  
+
   if (batteryPercentage <= 40) {
     batteryMultiplier = 1 - 0.25; // 25% deduction
   } else if (batteryPercentage <= 60) {
@@ -106,7 +102,7 @@ export const applyBatteryDeduction = (offer: number, batteryPercentage: number):
   } else {
     batteryMultiplier = 1.0; // No deduction for 81-100%
   }
-  
+
   return Math.max(0, Math.round(offer * batteryMultiplier));
 };
 
@@ -118,7 +114,7 @@ export const calculateFinalPrice = async (item: PriceListItem, params: PriceSear
       ...item,
       calculated_price: 0,
       deductions: { no_box: 0, no_charger: 0 },
-      final_price: 0
+      final_price: 0,
     };
   }
 
@@ -130,18 +126,18 @@ export const calculateFinalPrice = async (item: PriceListItem, params: PriceSear
   const noChargerDeduction = settings.no_charger_deduction || 0;
 
   const salePrice = item.sale_price || 0;
-  
+
   const deductions = {
     no_box: 0,
-    no_charger: 0
+    no_charger: 0,
   };
 
   // Apply total margin to sale_price: keep (1 - total_margin) of sale_price
   let flawlessPrice = salePrice * (1 - totalMargin);
-  
+
   // Subtract shipping costs
   flawlessPrice -= shipping;
-  
+
   // Deduction for missing box
   if (params.original_box === false) {
     deductions.no_box = noBoxDeduction;
@@ -162,7 +158,7 @@ export const calculateFinalPrice = async (item: PriceListItem, params: PriceSear
   if (params.condition === 'Good') {
     conditionPrice = Math.max(0, Math.round(flawlessPrice * (1 - 0.15))); // 15% off Flawless
   } else if (params.condition === 'Fair') {
-    conditionPrice = Math.max(0, Math.round(flawlessPrice * (1 - 0.30))); // 30% off Flawless
+    conditionPrice = Math.max(0, Math.round(flawlessPrice * (1 - 0.3))); // 30% off Flawless
   }
   // Excellent/Flawless uses the base price without additional discount
 
@@ -177,18 +173,14 @@ export const calculateFinalPrice = async (item: PriceListItem, params: PriceSear
     calculated_price: salePrice,
     deductions,
     final_price: finalPrice,
-    flawless_price: flawlessPrice // Store flawless price for reference
+    flawless_price: flawlessPrice, // Store flawless price for reference
   };
 };
 
 // Get all brands
 export const getAllBrands = async (): Promise<string[]> => {
   try {
-    const { data, error } = await supabase
-      .from('price_list')
-      .select('brand')
-      .eq('is_active', true)
-      .order('brand');
+    const { data, error } = await supabase.from('price_list').select('brand').eq('is_active', true).order('brand');
 
     if (error) {
       console.error('Error fetching brands:', error);
@@ -260,7 +252,7 @@ export const getPriceForDevice = async (
   originalBox: boolean = true,
   originalCharger: boolean = true,
   unlocked: boolean = true,
-  batteryPercentage?: number
+  batteryPercentage?: number,
 ): Promise<PriceResult | null> => {
   try {
     console.log('getPriceForDevice called with:', {
@@ -270,7 +262,7 @@ export const getPriceForDevice = async (
       originalBox,
       originalCharger,
       unlocked,
-      batteryPercentage
+      batteryPercentage,
     });
 
     const { data, error } = await supabase
@@ -294,7 +286,7 @@ export const getPriceForDevice = async (
       original_box: originalBox,
       original_charger: originalCharger,
       unlocked: unlocked,
-      battery_percentage: batteryPercentage
+      battery_percentage: batteryPercentage,
     });
 
     console.log('Final calculated result:', result);
@@ -308,11 +300,7 @@ export const getPriceForDevice = async (
 // Add new price list item (for administrators)
 export const addPriceListItem = async (item: PriceListInsert): Promise<PriceListItem | null> => {
   try {
-    const { data, error } = await supabase
-      .from('price_list')
-      .insert(item)
-      .select()
-      .single();
+    const { data, error } = await supabase.from('price_list').insert(item).select().single();
 
     if (error) {
       console.error('Error adding price list item:', error);
@@ -327,17 +315,9 @@ export const addPriceListItem = async (item: PriceListInsert): Promise<PriceList
 };
 
 // Update price list item (for administrators)
-export const updatePriceListItem = async (
-  id: number,
-  updates: PriceListUpdate
-): Promise<PriceListItem | null> => {
+export const updatePriceListItem = async (id: number, updates: PriceListUpdate): Promise<PriceListItem | null> => {
   try {
-    const { data, error } = await supabase
-      .from('price_list')
-      .update(updates)
-      .eq('id', id)
-      .select()
-      .single();
+    const { data, error } = await supabase.from('price_list').update(updates).eq('id', id).select().single();
 
     if (error) {
       console.error('Error updating price list item:', error);
@@ -354,10 +334,7 @@ export const updatePriceListItem = async (
 // Delete price list item (for administrators)
 export const deletePriceListItem = async (id: number): Promise<boolean> => {
   try {
-    const { error } = await supabase
-      .from('price_list')
-      .delete()
-      .eq('id', id);
+    const { error } = await supabase.from('price_list').delete().eq('id', id);
 
     if (error) {
       console.error('Error deleting price list item:', error);

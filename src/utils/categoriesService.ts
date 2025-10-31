@@ -1,56 +1,13 @@
 // Service for working with categories from Supabase
 import { supabase } from '../lib/supabase';
+import type { Category, Subcategory, Device } from '../types/category';
 
-export interface Category {
-  id: number;
-  key: string;
-  label: string;
-  icon?: string;
-  parent_id?: number;
-  sort_order: number;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface Subcategory {
-  id: number;
-  key: string;
-  label: string;
-  category_id: number;
-  sort_order: number;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface Device {
-  id: number;
-  key: string;
-  label: string;
-  brand: string;
-  model: string;
-  gtin?: string;
-  mpn?: string;
-  buy_min?: number;
-  resale_floor?: number;
-  icon?: string;
-  device_image?: string;
-  category_id?: number;
-  subcategory_id?: number;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
-}
+export type { Category, Subcategory, Device };
 
 // Get all categories
 export const getCategories = async (): Promise<Category[]> => {
   try {
-    const { data, error } = await supabase
-      .from('categories')
-      .select('*')
-      .eq('is_active', true)
-      .order('sort_order');
+    const { data, error } = await supabase.from('categories').select('*').eq('is_active', true).order('sort_order');
 
     if (error) {
       console.error('Error fetching categories:', error);
@@ -67,12 +24,8 @@ export const getCategories = async (): Promise<Category[]> => {
 // Get subcategories for specific category (or all if categoryId is 0)
 export const getSubcategories = async (categoryId: number = 0): Promise<Subcategory[]> => {
   try {
-    let query = supabase
-      .from('subcategories')
-      .select('*')
-      .eq('is_active', true)
-      .order('sort_order');
-    
+    let query = supabase.from('subcategories').select('*').eq('is_active', true).order('sort_order');
+
     if (categoryId > 0) {
       query = query.eq('category_id', categoryId);
     }
@@ -94,12 +47,8 @@ export const getSubcategories = async (categoryId: number = 0): Promise<Subcateg
 // Get devices for category (or all if categoryId is 0) from unified price_list table
 export const getDevicesByCategory = async (categoryId: number = 0): Promise<Device[]> => {
   try {
-    let query = supabase
-      .from('price_list')
-      .select('*')
-      .eq('is_active', true)
-      .order('device_name');
-    
+    let query = supabase.from('price_list').select('*').eq('is_active', true).order('device_name');
+
     if (categoryId > 0) {
       query = query.eq('category_id', categoryId);
     }
@@ -128,7 +77,7 @@ export const getDevicesByCategory = async (categoryId: number = 0): Promise<Devi
       subcategory_id: item.subcategory_id,
       is_active: item.is_active || true,
       created_at: item.created_at || '',
-      updated_at: item.updated_at || ''
+      updated_at: item.updated_at || '',
     }));
   } catch (error) {
     console.error('Error in getDevicesByCategory:', error);
@@ -168,7 +117,7 @@ export const getDevicesBySubcategory = async (subcategoryId: number): Promise<De
       subcategory_id: item.subcategory_id,
       is_active: item.is_active || true,
       created_at: item.created_at || '',
-      updated_at: item.updated_at || ''
+      updated_at: item.updated_at || '',
     }));
   } catch (error) {
     console.error('Error in getDevicesBySubcategory:', error);
@@ -207,7 +156,7 @@ export const getDeviceByKey = async (key: string): Promise<Device | null> => {
       subcategory_id: data.subcategory_id,
       is_active: data.is_active || true,
       created_at: data.created_at || '',
-      updated_at: data.updated_at || ''
+      updated_at: data.updated_at || '',
     };
   } catch (error) {
     console.error('Error in getDeviceByKey:', error);
@@ -248,7 +197,7 @@ export const searchDevices = async (query: string, limit: number = 10): Promise<
       subcategory_id: item.subcategory_id,
       is_active: item.is_active || true,
       created_at: item.created_at || '',
-      updated_at: item.updated_at || ''
+      updated_at: item.updated_at || '',
     }));
   } catch (error) {
     console.error('Error in searchDevices:', error);
@@ -259,12 +208,7 @@ export const searchDevices = async (query: string, limit: number = 10): Promise<
 // Get category by key
 export const getCategoryByKey = async (key: string): Promise<Category | null> => {
   try {
-    const { data, error } = await supabase
-      .from('categories')
-      .select('*')
-      .eq('key', key)
-      .eq('is_active', true)
-      .single();
+    const { data, error } = await supabase.from('categories').select('*').eq('key', key).eq('is_active', true).single();
 
     if (error) {
       console.error('Error fetching category by key:', error);
@@ -308,12 +252,12 @@ export const buildCatalogStructure = async () => {
 
     for (const category of categories) {
       const subcategories = await getSubcategories(category.id);
-      
+
       if (subcategories.length > 0) {
         // Категорія має підкатегорії
         catalog[category.key] = {
           label: category.label,
-          subcategories: {}
+          subcategories: {},
         };
 
         for (const subcategory of subcategories) {
@@ -333,7 +277,7 @@ export const buildCatalogStructure = async () => {
                 resale_floor: device.resale_floor || 0,
                 icon: device.icon || 'smartphone',
                 storage: device.storage || '128GB', // Add storage info
-                storageOptions: [] // Array to store all storage options
+                storageOptions: [], // Array to store all storage options
               };
             }
             // Add storage option to the array
@@ -342,10 +286,10 @@ export const buildCatalogStructure = async () => {
             }
             return acc;
           }, {});
-          
+
           catalog[category.key].subcategories[subcategory.key] = {
             label: subcategory.label,
-            items: Object.values(groupedDevices)
+            items: Object.values(groupedDevices),
           };
         }
       } else {
@@ -367,7 +311,7 @@ export const buildCatalogStructure = async () => {
               icon: device.icon || 'smartphone',
               device_image: device.device_image || '',
               storage: device.storage || '128GB', // Add storage info
-              storageOptions: [] // Array to store all storage options
+              storageOptions: [], // Array to store all storage options
             };
           }
           // Add storage option to the array
@@ -376,10 +320,10 @@ export const buildCatalogStructure = async () => {
           }
           return acc;
         }, {});
-        
+
         catalog[category.key] = {
           label: category.label,
-          items: Object.values(groupedDevices)
+          items: Object.values(groupedDevices),
         };
       }
     }
