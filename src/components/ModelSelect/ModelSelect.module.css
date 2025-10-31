@@ -1,0 +1,154 @@
+.wrapperModelSelect {
+  padding: 30px 0px;
+}
+
+.wrapperSearch {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  margin-bottom: 23px;
+}
+
+.inputSearch {
+  border-radius: 8px;
+  border: 1px solid #d1d8d8;
+  padding: 14px;
+  width: 100%;
+  max-width: 405px;
+}
+
+.inputSearch:focus {
+  outline: none;
+  border-color: #45b549;
+}
+
+.inputSearch::placeholder {
+  color: #6b7280;
+  font-family: Inter;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: normal;
+}
+
+.wrapperBtnIcon {
+  position: absolute;
+  top: 50%;
+  right: 14px;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.btnIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.btnIcon svg {
+  transition: fill 250ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btnIcon:hover svg {
+  fill: #45b549;
+}
+
+.subtitle {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  color: #808080;
+  font-family: Inter;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: normal;
+  margin-bottom: 21px;
+}
+
+.subtitle svg {
+  margin-right: 10px;
+}
+
+.title {
+  color: #000;
+  font-family: Inter;
+  font-size: 18px;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 28px;
+  margin-bottom: 19px;
+}
+
+.list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  list-style: none;
+  margin: 20px 0 0 0;
+  padding: 0;
+}
+
+.item {
+  border-radius: 8px;
+  border: 1px solid #d1d8d8;
+  background: #fff;
+  padding: 17px 27px 17px 13px;
+  transition:
+    background-color 250ms cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 250ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.item.active {
+  border-color: #45b549;
+  cursor: pointer;
+}
+
+.item.active .nextIcon {
+  stroke: #45b549;
+}
+
+.item:hover {
+  border-color: #45b549;
+  cursor: pointer;
+}
+
+.item:hover .nextIcon {
+  stroke: #45b549;
+}
+
+.itemContent {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.deviceImage {
+  width: 36px;
+  height: 36px;
+}
+
+.deviceLabel {
+  color: #1a1a1a;
+  font-family: Inter;
+  font-size: 18px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 28px;
+}
+
+.nextIcon {
+  fill: none;
+  stroke: #000;
+  margin-left: auto;
+  transition: stroke 250ms cubic-bezier(0.4, 0, 0.2, 1);
+}

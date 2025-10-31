@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
-import { 
-  getCategories, 
-  getSubcategories, 
-  getDevicesByCategory, 
+import {
+  getCategories,
+  getSubcategories,
+  getDevicesByCategory,
   getDevicesBySubcategory,
   getDeviceByKey,
   searchDevices,
@@ -11,7 +11,7 @@ import {
   buildCatalogStructure,
   Category,
   Subcategory,
-  Device
+  Device,
 } from '../utils/categoriesService';
 
 export const useCategories = () => {
@@ -31,9 +31,9 @@ export const useCategories = () => {
       const [categoriesData, subcategoriesData, devicesData] = await Promise.all([
         getCategories(),
         getSubcategories(0), // Get all subcategories
-        getDevicesByCategory(0) // Get all devices
+        getDevicesByCategory(0), // Get all devices
       ]);
-      
+
       setCategories(categoriesData);
       setSubcategories(subcategoriesData);
       setDevices(devicesData);
@@ -75,7 +75,7 @@ export const useCategories = () => {
     devices,
     catalog,
     loadAllData,
-    loadCatalog
+    loadCatalog,
   };
 };
 
@@ -204,6 +204,6 @@ export const useCategoryData = () => {
     findDeviceByKey,
     searchDevicesByName,
     findCategoryByKey,
-    findSubcategoryByKey
+    findSubcategoryByKey,
   };
 };

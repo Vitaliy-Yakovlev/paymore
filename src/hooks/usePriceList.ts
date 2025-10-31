@@ -1,13 +1,13 @@
 import { useState, useCallback } from 'react';
-import { 
-  searchPrices, 
-  getPriceForDevice, 
-  getAllBrands, 
-  getDevicesByBrand, 
+import {
+  searchPrices,
+  getPriceForDevice,
+  getAllBrands,
+  getDevicesByBrand,
   getStorageOptions,
   searchDevices,
   PriceSearchParams,
-  PriceResult
+  PriceResult,
 } from '../utils/priceListService';
 
 export const usePriceList = () => {
@@ -30,37 +30,40 @@ export const usePriceList = () => {
     }
   }, []);
 
-  const getDevicePrice = useCallback(async (
-    deviceName: string,
-    storage: string,
-    condition: 'Excellent' | 'Good' | 'Fair',
-    originalBox: boolean = true,
-    originalCharger: boolean = true,
-    unlocked: boolean = true,
-    batteryPercentage?: number
-  ): Promise<PriceResult | null> => {
-    setLoading(true);
-    setError(null);
+  const getDevicePrice = useCallback(
+    async (
+      deviceName: string,
+      storage: string,
+      condition: 'Excellent' | 'Good' | 'Fair',
+      originalBox: boolean = true,
+      originalCharger: boolean = true,
+      unlocked: boolean = true,
+      batteryPercentage?: number,
+    ): Promise<PriceResult | null> => {
+      setLoading(true);
+      setError(null);
 
-    try {
-      const result = await getPriceForDevice(
-        deviceName,
-        storage,
-        condition,
-        originalBox,
-        originalCharger,
-        unlocked,
-        batteryPercentage
-      );
-      return result;
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
-      setError(errorMessage);
-      return null;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+      try {
+        const result = await getPriceForDevice(
+          deviceName,
+          storage,
+          condition,
+          originalBox,
+          originalCharger,
+          unlocked,
+          batteryPercentage,
+        );
+        return result;
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+        setError(errorMessage);
+        return null;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [],
+  );
 
   const getBrands = useCallback(async (): Promise<string[]> => {
     setLoading(true);
@@ -134,6 +137,6 @@ export const usePriceList = () => {
     getBrands,
     getDevices,
     getStorageVariants,
-    searchDeviceNames
+    searchDeviceNames,
   };
 };

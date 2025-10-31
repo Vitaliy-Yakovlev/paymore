@@ -1,0 +1,30 @@
+.radioLabel {
+  color: #1a1a1a;
+  text-align: center;
+  font-family: Inter;
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 24px;
+  border-radius: 6px;
+  border: 1px solid #d1d8d8;
+  background: #fff;
+  padding: 23px;
+  width: 100%;
+  cursor: pointer;
+  height: 70px;
+
+  transition:
+    border 250ms cubic-bezier(0.4, 0, 0.2, 1),
+    background 250ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.radioLabel:hover {
+  border: 2px solid #45b549;
+  background: #e3ffe4;
+}
+
+.radioLabel.active {
+  border: 2px solid #45b549;
+  background: #e3ffe4;
+}
