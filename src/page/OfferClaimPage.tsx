@@ -53,7 +53,9 @@ const OfferClaimPage: React.FC = () => {
         <p className='offer-claim-page-subtitle'>Your offer is ready, claim your cash!</p>
 
         <p className='offer-claim-page-amount'>
-          $1,315 <span>CAD</span>
+          <span className='amount-text'>
+            $1,315 <span className='cad-text'>CAD</span>
+          </span>
         </p>
 
         <p className='offer-claim-page-expiry'>Hold expires in {formatTime(timeLeft)}</p>
@@ -81,7 +83,7 @@ const OfferClaimPage: React.FC = () => {
           />
         </div>
 
-        <Button onClick={() => {}} style={{ background: '#45B549', color: '#fff', width: '100%', opacity: 1 }}>
+        <Button disabled={!verificationChecked} onClick={() => navigate('/category')} colorButton={'green'}>
           Claim my cash now
         </Button>
       </div>

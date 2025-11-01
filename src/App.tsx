@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState, useCallback, lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { RotatingLines } from 'react-loader-spinner';
 import {
   ChevronRight,
   ArrowRight,
@@ -70,11 +71,9 @@ const STORE_GOOGLE_MAPS = 'https://www.google.com/maps/search/?api=1&query=PayMo
 const SHEET_WEBHOOK = (typeof window !== 'undefined' && (window as any).PAYMORE_SHEET_WEBHOOK) || null;
 
 // Thank-you + audio configuration (override at runtime with window.*)
-const THANKYOU_URL =
-  (typeof window !== 'undefined' && (window as any).PAYMORE_THANKYOU_URL) || '/thank-you/quote-locked';
+const THANKYOU_URL = (typeof window !== 'undefined' && (window as any).PAYMORE_THANKYOU_URL) || '/thank-you/quote-locked';
 const SOUND_URL = (typeof window !== 'undefined' && (window as any).PAYMORE_SOUND_URL) || '/assets/locked-chime.mp3'; // ~3s chime
-const CASH_SOUND_URL =
-  (typeof window !== 'undefined' && (window as any).PAYMORE_CASH_SOUND_URL) || '/assets/cash-register.mp3';
+const CASH_SOUND_URL = (typeof window !== 'undefined' && (window as any).PAYMORE_CASH_SOUND_URL) || '/assets/cash-register.mp3';
 const SOUND_START = (typeof window !== 'undefined' && (window as any).PAYMORE_SOUND_START_SEC) || 0; // seconds
 // Removed SOUND_DURATION_MS as it's no longer used
 // const COIN_URL = (typeof window !== "undefined" && (window as any).PAYMORE_COIN_URL) || "/assets/paymore-coin.png";
@@ -82,18 +81,13 @@ const SOUND_START = (typeof window !== 'undefined' && (window as any).PAYMORE_SO
 // Barcode Lookup (optional)
 const BARCODELOOKUP_KEY = (typeof window !== 'undefined' && (window as any).PAYMORE_BARCODELOOKUP_API_KEY) || null;
 const BARCODELOOKUP_URL =
-  (typeof window !== 'undefined' && (window as any).PAYMORE_BARCODELOOKUP_URL) ||
-  'https://api.barcodelookup.com/v3/products';
+  (typeof window !== 'undefined' && (window as any).PAYMORE_BARCODELOOKUP_URL) || 'https://api.barcodelookup.com/v3/products';
 const BARCODELOOKUP_PROXY = (typeof window !== 'undefined' && (window as any).PAYMORE_BARCODELOOKUP_PROXY) || null; // if you deploy Apps Script proxy
 
 // ---------------- Tiny UI primitives ----------------
 const cn = (...x: Array<string | false | null | undefined>) => x.filter(Boolean).join(' ');
 const SafeIcon = ({ Comp, className = '' }: { Comp: any; className?: string }) =>
-  typeof Comp === 'function' ? (
-    <Comp className={className} />
-  ) : (
-    <span className={cn('inline-block rounded bg-zinc-200', className)} />
-  );
+  typeof Comp === 'function' ? <Comp className={className} /> : <span className={cn('inline-block rounded bg-zinc-200', className)} />;
 
 const Shell: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <div className='paymore-container'>
@@ -134,9 +128,7 @@ const Shell: React.FC<{ children: React.ReactNode }> = ({ children }) => (
 const Card: React.FC<{ className?: string; children: React.ReactNode }> = ({ className = '', children }) => (
   <div className={cn('paymore-card', className)}>{children}</div>
 );
-const CardHeader: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <div className='px-5 pt-5'>{children}</div>
-);
+const CardHeader: React.FC<{ children: React.ReactNode }> = ({ children }) => <div className='px-5 pt-5'>{children}</div>;
 const CardTitle: React.FC<{ className?: string; children: React.ReactNode }> = ({ className = '', children }) => (
   <div className={cn('text-base font-semibold text-zinc-900', className)}>{children}</div>
 );
@@ -212,19 +204,12 @@ const DeviceImage: React.FC<{
 }> = ({ imageUrl, icon, categoryIcon, size = 'medium' }) => {
   const [imageError, setImageError] = useState(false);
 
-  const sizeClass =
-    size === 'small' ? 'device-image-small' : size === 'large' ? 'device-image-large' : 'device-image-medium';
+  const sizeClass = size === 'small' ? 'device-image-small' : size === 'large' ? 'device-image-large' : 'device-image-medium';
 
   if (imageUrl && !imageError) {
     return (
       <div className={`device-image-container ${sizeClass}`}>
-        <img
-          src={imageUrl}
-          alt='Device'
-          className='device-image'
-          onError={() => setImageError(true)}
-          onLoad={() => setImageError(false)}
-        />
+        <img src={imageUrl} alt='Device' className='device-image' onError={() => setImageError(true)} onLoad={() => setImageError(false)} />
       </div>
     );
   }
@@ -256,8 +241,7 @@ async function postToSheet(payload: any) {
 
 function buildBarcodeLookupUrl(code: string) {
   if (BARCODELOOKUP_PROXY) return `${BARCODELOOKUP_PROXY}?barcode=${encodeURIComponent(code)}`;
-  if (BARCODELOOKUP_KEY)
-    return `${BARCODELOOKUP_URL}?barcode=${encodeURIComponent(code)}&key=${encodeURIComponent(BARCODELOOKUP_KEY)}`;
+  if (BARCODELOOKUP_KEY) return `${BARCODELOOKUP_URL}?barcode=${encodeURIComponent(code)}&key=${encodeURIComponent(BARCODELOOKUP_KEY)}`;
   return null;
 }
 
@@ -386,9 +370,7 @@ export default function App() {
     } else {
       list = catSpec.items || [];
     }
-    const minGated = (list || []).filter(
-      d => Number(d.buy_min || 0) >= MIN_PURCHASE && Number(d.resale_floor || 0) >= MIN_RESALE,
-    );
+    const minGated = (list || []).filter(d => Number(d.buy_min || 0) >= MIN_PURCHASE && Number(d.resale_floor || 0) >= MIN_RESALE);
     const query = q.trim().toLowerCase();
     if (!query) return minGated;
     return minGated.filter(d => [d.label, d.brand, d.model].filter(Boolean).join(' ').toLowerCase().includes(query));
@@ -428,8 +410,7 @@ export default function App() {
 
         // Use the first available storage option if storage is not set
         const storageToUse =
-          selected.storage ||
-          (selected.storageOptions && selected.storageOptions.length > 0 ? selected.storageOptions[0] : '128GB');
+          selected.storage || (selected.storageOptions && selected.storageOptions.length > 0 ? selected.storageOptions[0] : '128GB');
 
         // Get price from database using the new calculator
         console.log('Calculating payout for:', {
@@ -480,10 +461,7 @@ export default function App() {
   }, [selected, mode, battery, condition, hasCharger, hasBox, unlocked, isBusiness, bizQty]);
 
   const eligible = useMemo(
-    () =>
-      selected
-        ? Number(selected.buy_min || 0) >= MIN_PURCHASE && Number(selected.resale_floor || 0) >= MIN_RESALE
-        : false,
+    () => (selected ? Number(selected.buy_min || 0) >= MIN_PURCHASE && Number(selected.resale_floor || 0) >= MIN_RESALE : false),
     [selected],
   );
 
@@ -681,9 +659,7 @@ export default function App() {
   };
 
   function buildExportPayload() {
-    const eligible = selected
-      ? Number(selected.buy_min || 0) >= MIN_PURCHASE && Number(selected.resale_floor || 0) >= MIN_RESALE
-      : false;
+    const eligible = selected ? Number(selected.buy_min || 0) >= MIN_PURCHASE && Number(selected.resale_floor || 0) >= MIN_RESALE : false;
     return {
       store: STORE_NAME,
       mode,
@@ -1029,11 +1005,24 @@ export default function App() {
     <>
       <Header />
       <main>
-        <Suspense fallback={<strong>Loading...</strong>}>
+        <Suspense
+          fallback={
+            <RotatingLines
+              visible={true}
+              height='36'
+              width='36'
+              color='#45B549'
+              strokeWidth='5'
+              animationDuration='0.75'
+              ariaLabel='rotating-lines-loading'
+              wrapperClass='spinner-wrapper'
+            />
+          }
+        >
           <Routes>
             <Route path='/' element={<Navigate to='/category' replace />} />
             <Route path='/category' element={<HomePage />} />
-            <Route path='/category/:brand/:model/:deviceName?' element={<DevicePage />} />
+            <Route path='/category/:brand/:model?/:deviceName?' element={<DevicePage />} />
             <Route path='/summary' element={<OfferClaimPage />} />
             <Route path='*' element={<>Not found</>} />
           </Routes>

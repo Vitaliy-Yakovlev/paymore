@@ -26,7 +26,7 @@ const DeviceDetail: React.FC<DeviceDetailProps> = ({ device, deviceVariants, cat
     nothing_of_these: false,
   });
 
-  const [batteryHealth, setBatteryHealth] = useState<number>(54);
+  const [batteryHealth, setBatteryHealth] = useState<number>(74);
 
   const handleStorageChange = (value: string | number) => {
     setSelectedStorage(prev => (value === prev ? '' : value));
@@ -41,10 +41,7 @@ const DeviceDetail: React.FC<DeviceDetailProps> = ({ device, deviceVariants, cat
         {device.device_image && <img width={123} height={123} src={device.device_image} alt={device.label} />}
         <div className={css.wrapperDeviceInfo}>
           <h1 className={css.deviceLabel}>{device.label}</h1>
-          <Button
-            onClick={() => navigate('/category')}
-            style={{ background: '#45B549', color: '#fff', width: '100%', opacity: 1 }}
-          >
+          <Button onClick={() => navigate('/category')} colorButton={'green'}>
             Change item
           </Button>
         </div>
@@ -115,11 +112,7 @@ const DeviceDetail: React.FC<DeviceDetailProps> = ({ device, deviceVariants, cat
           <p className={css.title}>Storage size</p>
 
           <div className={css.wrapperRadioBtn}>
-            <ButtonRadio
-              options={['128GB', '256GB', '512GB', '1TB']}
-              value={selectedStorage}
-              onChange={handleStorageChange}
-            />
+            <ButtonRadio options={['128GB', '256GB', '512GB', '1TB']} value={selectedStorage} onChange={handleStorageChange} />
           </div>
 
           <p className={css.title} style={{ marginBottom: '0px' }}>
@@ -131,14 +124,19 @@ const DeviceDetail: React.FC<DeviceDetailProps> = ({ device, deviceVariants, cat
             Battery % (if applicable)
           </p>
 
-          <input
-            className={css.batterySlider}
-            onChange={e => setBatteryHealth(Number(e.target.value))}
-            type='range'
-            min='0'
-            max='100'
-            value={batteryHealth}
-          />
+          <div className={css.sliderContainer}>
+            <input
+              className={css.batterySlider}
+              onChange={e => setBatteryHealth(Number(e.target.value))}
+              type='range'
+              min='0'
+              max='100'
+              value={batteryHealth}
+              style={{
+                background: `linear-gradient(to right, #45B549 0%, #45B549 ${batteryHealth}%, #E0E0E0 ${batteryHealth}%, #E0E0E0 100%)`,
+              }}
+            />
+          </div>
           <p className={css.currentText}>Current: {batteryHealth}%</p>
         </div>
       )}
@@ -148,11 +146,7 @@ const DeviceDetail: React.FC<DeviceDetailProps> = ({ device, deviceVariants, cat
           <p className={css.text}>Choose the correct condition to get an accurate quote for your device trade-in.</p>
 
           <div className={css.wrapperBntRadio}>
-            <ButtonRadio
-              options={['Flawless', 'Good', 'Fair']}
-              value={selectedCondition}
-              onChange={handleConditionChange}
-            />
+            <ButtonRadio options={['Flawless', 'Good', 'Fair']} value={selectedCondition} onChange={handleConditionChange} />
           </div>
         </>
       )}
@@ -181,9 +175,7 @@ const DeviceDetail: React.FC<DeviceDetailProps> = ({ device, deviceVariants, cat
             navigate('/summary');
           }}
           disabled={
-            step === 2
-              ? !selectedStorage || Object.values(additionalDetails).every(element => element === false)
-              : !selectedCondition
+            step === 2 ? !selectedStorage || Object.values(additionalDetails).every(element => element === false) : !selectedCondition
           }
           active={
             (Boolean(selectedStorage) && Object.values(additionalDetails).includes(true) && step === 2) ||

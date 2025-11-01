@@ -1,8 +1,6 @@
 .wrapperCategory {
-  max-width: 735px;
   height: 100%;
   padding: 32px 0px 60px 0px;
-  margin: 0 auto;
 }
 
 .title {
@@ -22,12 +20,15 @@
 
 .list {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 165px));
+  grid-template-columns: repeat(3, 165px);
   justify-content: space-between;
-  gap: 50px 120px;
+  gap: 50px;
   padding: 0;
   margin: 0;
   list-style: none;
+  max-width: 735px;
+  padding: 0px 16px;
+  margin: 0 auto;
 }
 
 .item {
@@ -38,4 +39,11 @@
   font-style: normal;
   font-weight: 500;
   line-height: 28px;
+}
+
+@media screen and (max-width: 660px) {
+  .list {
+    grid-template-columns: repeat(2, 165px);
+    justify-content: center;
+  }
 }

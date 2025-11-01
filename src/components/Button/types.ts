@@ -4,4 +4,5 @@ export interface ButtonProps {
   style?: React.CSSProperties;
   disabled?: boolean;
   active?: boolean;
+  colorButton?: string;
 }
