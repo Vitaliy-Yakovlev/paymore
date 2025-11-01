@@ -71,3 +71,15 @@
   opacity: 0.3;
   cursor: not-allowed;
 }
+
+.button.green {
+  background: #45b549;
+  color: #fff;
+  width: 100%;
+  opacity: 1;
+}
+
+.button.green:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}

@@ -1,5 +1,6 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
+import { RotatingLines } from 'react-loader-spinner';
 import { useCategories } from '../hooks/useCategories';
 import ModelSelect from '../components/ModelSelect';
 import DeviceDetail from '../components/DeviceDetail';
@@ -91,9 +92,7 @@ const DevicePage: React.FC = () => {
     const query = q.trim().toLowerCase();
     if (!query) return deviceList;
 
-    return deviceList.filter((d: any) =>
-      [d.label, d.brand, d.model].filter(Boolean).join(' ').toLowerCase().includes(query),
-    );
+    return deviceList.filter((d: any) => [d.label, d.brand, d.model].filter(Boolean).join(' ').toLowerCase().includes(query));
   }, [deviceList, q]);
 
   const uniqueDevices = useMemo(() => {
@@ -128,7 +127,19 @@ const DevicePage: React.FC = () => {
 
   return (
     <>
-      {loading && <div style={{ padding: '20px' }}>Loading...</div>}
+      {loading && (
+        <RotatingLines
+          visible={true}
+          height='36'
+          width='36'
+          color='#45B549'
+          strokeWidth='5'
+          animationDuration='0.75'
+          ariaLabel='rotating-lines-loading'
+          wrapperStyle={{}}
+          wrapperClass='spinner-wrapper'
+        />
+      )}
       {error && <div style={{ padding: '20px', color: 'red' }}>Error: {error}</div>}
       {!loading && !error && (
         <StepContainer step={step}>

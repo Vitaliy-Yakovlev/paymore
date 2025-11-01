@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ModelSelectProps } from './types';
 import { Device } from '../../types/category';
@@ -23,8 +23,30 @@ const ModelSelect: React.FC<ModelSelectProps> = ({
   model,
   categoryLabel,
 }) => {
-  const [selectedDevice, setSelectedDevice] = useState<Device | undefined>();
+  const [currentPage, setCurrentPage] = useState(0);
   const navigate = useNavigate();
+
+  const ITEMS_PER_PAGE = 4;
+  const totalPages = Math.ceil(items.length / ITEMS_PER_PAGE);
+  const startIndex = currentPage * ITEMS_PER_PAGE;
+  const endIndex = startIndex + ITEMS_PER_PAGE;
+  const currentItems = items.slice(startIndex, endIndex);
+
+  const handlePrevious = () => {
+    if (currentPage > 0) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const handleNext = () => {
+    if (currentPage < totalPages - 1) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  useEffect(() => {
+    setCurrentPage(0);
+  }, [items.length]);
 
   return (
     <div className={css.wrapperModelSelect}>
@@ -67,11 +89,24 @@ const ModelSelect: React.FC<ModelSelectProps> = ({
       <p className={css.title}>Choose device model</p>
 
       <ul className={css.list}>
-        {items.map((item: any) => (
+        {currentItems.map((item: any) => (
           <li
-            className={`${css.item} ${selectedDevice && item.id === selectedDevice.id ? css.active : ''}`}
+            className={`${css.item}`}
             key={item.key}
-            onClick={() => setSelectedDevice(item)}
+            onClick={() => {
+              let cleanKey = item.key;
+              cleanKey = cleanKey.replace(/[-_]\d+\s*(GB|TB|MB)$/gi, '');
+              cleanKey = cleanKey.replace(/[-_]\d+$/, '');
+
+              const deviceSlug = cleanKey.toLowerCase().replace(/_/g, '-');
+
+              navigate(`/category/${brand}/${model}/${deviceSlug}`, {
+                state: {
+                  device: item,
+                  categoryKey: category,
+                },
+              });
+            }}
           >
             <div className={css.itemContent}>
               {item.device_image && <img className={css.deviceImage} src={item.device_image} alt={item.label} />}
@@ -83,40 +118,17 @@ const ModelSelect: React.FC<ModelSelectProps> = ({
             </div>
           </li>
         ))}
-        {items.length === 0 && <p className={css.noDevices}>No devices found matching your criteria</p>}
+        {currentItems.length === 0 && <p className={css.noDevices}>No devices found matching your criteria</p>}
       </ul>
 
       <div className='wrapper-btn-step' style={{ marginTop: '30px' }}>
-        <Button
-          onClick={() => {
-            navigate('/category');
-          }}
-        >
+        <Button onClick={handlePrevious} disabled={currentPage === 0}>
           <svg className={'arrow-icon'} width={17} height={16}>
             <use href={ArrowSvg} />
           </svg>
           Previous
         </Button>
-        <Button
-          onClick={() => {
-            if (!selectedDevice) return;
-
-            let cleanKey = selectedDevice.key;
-            cleanKey = cleanKey.replace(/[-_]\d+\s*(GB|TB|MB)$/gi, '');
-            cleanKey = cleanKey.replace(/[-_]\d+$/, '');
-
-            const deviceSlug = cleanKey.toLowerCase().replace(/_/g, '-');
-
-            navigate(`/category/${brand}/${model}/${deviceSlug}`, {
-              state: {
-                device: selectedDevice,
-                categoryKey: category,
-              },
-            });
-          }}
-          disabled={!selectedDevice}
-          active={!!selectedDevice}
-        >
+        <Button onClick={handleNext} disabled={currentPage >= totalPages - 1}>
           Next Page
           <svg className={'arrow-icon next'} width={17} height={16}>
             <use href={ArrowSvg} />

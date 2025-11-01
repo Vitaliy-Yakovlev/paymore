@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { RotatingLines } from 'react-loader-spinner';
 import { useAuth } from '../hooks/useSupabase';
 
 export const AuthComponent: React.FC = () => {
@@ -18,7 +19,19 @@ export const AuthComponent: React.FC = () => {
   };
 
   if (loading) {
-    return <div>Loading...</div>;
+    return (
+      <RotatingLines
+        visible={true}
+        height='36'
+        width='36'
+        color='#45B549'
+        strokeWidth='5'
+        animationDuration='0.75'
+        ariaLabel='rotating-lines-loading'
+        wrapperStyle={{}}
+        wrapperClass='spinner-wrapper'
+      />
+    );
   }
 
   if (user) {

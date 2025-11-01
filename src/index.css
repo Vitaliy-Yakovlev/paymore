@@ -1,8 +1,8 @@
 body {
   margin: 0;
   font-family:
-    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans',
-    'Helvetica Neue', sans-serif;
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -24,6 +24,13 @@ main {
 
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+}
+
+.spinner-wrapper {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
 }
 
 /* Device Styles */
@@ -82,7 +89,7 @@ code {
 
 /* OfferClaimPage */
 .wrapper-offer-claim-page {
-  width: 100%;
+  /* width: 100%; */
   height: 100%;
   padding: 70px 15px 60px 15px;
 }
@@ -119,18 +126,29 @@ code {
 }
 
 .offer-claim-page-amount {
-  color: #45b549;
   text-align: center;
+  color: #45b549;
+
   font-family: Inter;
   font-size: 36px;
   font-style: normal;
   font-weight: 700;
   line-height: 20px;
+  margin: 0 auto;
   margin-bottom: 35px;
+  max-width: 100%;
 }
 
-.offer-claim-page-amount span {
+.amount-text {
+  position: relative;
+}
+
+.offer-claim-page-amount .cad-text {
+  position: absolute;
+  top: 6px;
+  right: -54px;
   font-weight: 400;
+  font-size: 26px;
 }
 
 .offer-claim-page-expiry {
