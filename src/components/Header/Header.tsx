@@ -7,7 +7,7 @@ const Header: React.FC = () => {
   return (
     <header className={css.header}>
       <Link to='/category'>
-        <svg className={css.headerLogo} width='200' height='32'>
+        <svg className={css.headerLogo}>
           <use href={Logo} />
         </svg>
       </Link>

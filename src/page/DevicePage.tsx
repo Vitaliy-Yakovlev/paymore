@@ -15,7 +15,7 @@ const DevicePage: React.FC = () => {
   const location = useLocation();
   const { categories, subcategories, devices, loading, error } = useCategories();
 
-  const categoryKey = (location.state as any)?.categoryKey || (brand && model ? `${brand}_${model}`.toUpperCase() : '');
+  const categoryKey = (location.state as any)?.categoryKey || (brand && model ? `${brand}_${model}`.toLowerCase() : '');
   const [subcategory, setSubcategory] = useState<string>('');
   const [q, setQ] = useState<string>('');
 
@@ -24,6 +24,7 @@ const DevicePage: React.FC = () => {
       setStep(2);
     } else if (brand && model) {
       setStep(1);
+      setQ('');
     }
   }, [deviceName, brand, model]);
 
@@ -46,17 +47,17 @@ const DevicePage: React.FC = () => {
     const cat = categories.find(c => c.key === categoryKey);
     if (!cat) return {};
 
+    const subcats = subcategories.filter((sub: any) => sub.category_id === cat.id);
+
     return {
       label: cat.label,
-      subcategories: subcategories
-        .filter((sub: any) => sub.category_id === cat.id)
-        .reduce((acc: any, sub: any) => {
-          acc[sub.key] = {
-            label: sub.label,
-            items: devices.filter((d: any) => d.subcategory_id === sub.id),
-          };
-          return acc;
-        }, {}),
+      subcategories: subcats.reduce((acc: any, sub: any) => {
+        acc[sub.key] = {
+          label: sub.label,
+          items: devices.filter((d: any) => d.subcategory_id === sub.id),
+        };
+        return acc;
+      }, {}),
       items: devices.filter((d: any) => d.category_id === cat.id && !d.subcategory_id),
     };
   }, [categories, subcategories, devices, categoryKey]);
@@ -64,8 +65,9 @@ const DevicePage: React.FC = () => {
   const subcatKeys = useMemo(() => Object.keys(catSpec.subcategories || {}), [catSpec]);
 
   useEffect(() => {
-    setSubcategory(subcatKeys.length ? subcatKeys[0] : '');
-  }, [subcatKeys]);
+    const newSubcategory = subcatKeys.length ? subcatKeys[0] : '';
+    setSubcategory(newSubcategory);
+  }, [subcatKeys, deviceName]); // Добавили deviceName чтобы сбрасывать при возврате
 
   const deviceList = useMemo(() => {
     if (catSpec.subcategories && subcategory && catSpec.subcategories[subcategory]) {
@@ -153,7 +155,7 @@ const DevicePage: React.FC = () => {
               setStep={setStep}
             />
           )}
-          {!loading && !error && catSpec.label && !selectedDevice && (
+          {!loading && !error && catSpec.label && !selectedDevice && step === 1 && (
             <ModelSelect
               catSpec={catSpec}
               subcatKeys={subcatKeys}
