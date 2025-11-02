@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import ArrowSvg from '../../img/arrow-nex-back.svg';
 import Button from '../Button';
 import ButtonRadio from '../ButtonRadio';
@@ -17,6 +17,7 @@ interface DeviceDetailProps {
 
 const DeviceDetail: React.FC<DeviceDetailProps> = ({ device, deviceVariants, catSpec, category, step, setStep }) => {
   const navigate = useNavigate();
+  const { brand, model } = useParams();
   const [selectedStorage, setSelectedStorage] = useState<string | number>(device.storage);
   const [selectedCondition, setSelectedCondition] = useState<string | number>(device.condition);
   const [additionalDetails, setAdditionalDetails] = useState<{ [key: string]: boolean }>({
@@ -153,17 +154,21 @@ const DeviceDetail: React.FC<DeviceDetailProps> = ({ device, deviceVariants, cat
       <div className='wrapper-btn-step' style={{ marginTop: '30px' }}>
         <Button
           onClick={() => {
-            if (step === 3) {
+            if (step === 2) {
               setStep(prev => prev - 1);
+              navigate(`/category/${brand}/${model}`);
               return;
             }
-            navigate('/category');
+
+            if (step === 3) {
+              setStep(prev => prev - 1);
+            }
           }}
         >
           <svg className={'arrow-icon'} width={17} height={16}>
             <use href={ArrowSvg} />
           </svg>
-          Reset
+          Go back
         </Button>
         <Button
           onClick={() => {

@@ -11,3 +11,15 @@
   background: #fff;
   padding: 18px;
 }
+
+.headerLogo {
+  width: 200px;
+  height: 32px;
+}
+
+@media screen and (max-width: 767px) {
+  .headerLogo {
+    width: 150px;
+    height: 25px;
+  }
+}

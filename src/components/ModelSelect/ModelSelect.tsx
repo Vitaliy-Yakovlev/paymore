@@ -104,6 +104,7 @@ const ModelSelect: React.FC<ModelSelectProps> = ({
                 state: {
                   device: item,
                   categoryKey: category,
+                  path: `/category/${brand}/${model}/${deviceSlug}`,
                 },
               });
             }}

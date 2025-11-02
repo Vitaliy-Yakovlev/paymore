@@ -255,16 +255,6 @@ export const getPriceForDevice = async (
   batteryPercentage?: number,
 ): Promise<PriceResult | null> => {
   try {
-    console.log('getPriceForDevice called with:', {
-      deviceName,
-      storage,
-      condition,
-      originalBox,
-      originalCharger,
-      unlocked,
-      batteryPercentage,
-    });
-
     const { data, error } = await supabase
       .from('price_list')
       .select('*')

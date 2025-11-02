@@ -413,18 +413,6 @@ export default function App() {
           selected.storage || (selected.storageOptions && selected.storageOptions.length > 0 ? selected.storageOptions[0] : '128GB');
 
         // Get price from database using the new calculator
-        console.log('Calculating payout for:', {
-          deviceName: selected.label || selected.model || 'iPhone',
-          storage: selected.storage,
-          storageOptions: selected.storageOptions,
-          storageToUse: storageToUse,
-          condition: conditionType,
-          hasBox,
-          hasCharger,
-          unlocked,
-          battery,
-          selected: selected,
-        });
 
         const priceResult = await getPriceForDevice(
           selected.label || selected.model || 'iPhone', // device name
@@ -435,8 +423,6 @@ export default function App() {
           unlocked, // unlocked
           battery, // battery percentage
         );
-
-        console.log('Price result:', priceResult);
 
         if (!priceResult) {
           setPayout(0);
@@ -740,7 +726,6 @@ export default function App() {
           window.speechSynthesis.speak(u);
         } catch {}
       } catch (e) {
-        console.log('BarcodeLookup error', e);
         setLookup(null);
         setLookupError('Lookup failed. Try again or enter details manually.');
       } finally {
@@ -913,7 +898,6 @@ export default function App() {
         created_at: new Date().toISOString(),
         status: 'pending',
       });
-      console.log('Quote saved to Supabase successfully');
       supabaseSuccess = true;
     } catch (error) {
       console.error('Error saving to Supabase:', error);
