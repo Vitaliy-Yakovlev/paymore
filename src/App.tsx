@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState, useCallback, lazy, Suspense } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router';
 import { RotatingLines } from 'react-loader-spinner';
 import {
   ChevronRight,
@@ -1006,7 +1006,9 @@ export default function App() {
           <Routes>
             <Route path='/' element={<Navigate to='/category' replace />} />
             <Route path='/category' element={<HomePage />} />
-            <Route path='/category/:brand/:model?/:deviceName?' element={<DevicePage />} />
+            <Route path='/category/:brand/:model?' element={<DevicePage />}>
+              <Route path=':deviceName' element={<DevicePage />} />
+            </Route>
             <Route path='/summary' element={<OfferClaimPage />} />
             <Route path='*' element={<>Not found</>} />
           </Routes>

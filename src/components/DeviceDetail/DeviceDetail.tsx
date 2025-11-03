@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router';
 import ArrowSvg from '../../img/arrow-nex-back.svg';
 import Button from '../Button';
 import ButtonRadio from '../ButtonRadio';

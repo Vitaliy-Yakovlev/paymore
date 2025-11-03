@@ -41,6 +41,13 @@
   line-height: 28px;
 }
 
+@media screen and (max-width: 768px) {
+  .list {
+    gap: 28px;
+    justify-content: center;
+  }
+}
+
 @media screen and (max-width: 660px) {
   .list {
     grid-template-columns: repeat(2, 165px);
