@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import confetti from 'canvas-confetti';
 import Checkbox from '../components/Checkbox';
 import Button from '../components/Button';

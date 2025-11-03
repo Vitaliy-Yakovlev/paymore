@@ -57,3 +57,10 @@
   width: 90px;
   height: 90px;
 }
+
+@media screen and (max-width: 768px) {
+  .title {
+    font-size: 14px;
+    font-weight: 600;
+  }
+}
