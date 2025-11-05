@@ -4,3 +4,9 @@
   padding-bottom: 130px;
   margin: 0px auto;
 }
+
+@media screen and (max-width: 768px) {
+  .stepContainer {
+    padding-bottom: 16px;
+  }
+}

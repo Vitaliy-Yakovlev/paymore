@@ -51,11 +51,12 @@
     2px 8px 9px 0 rgba(0, 0, 0, 0.09),
     0 2px 5px 0 rgba(0, 0, 0, 0.1);
   padding: 6px 14px;
+  height: 90px;
 }
 
 .image {
   width: 90px;
-  height: 90px;
+  height: auto;
 }
 
 @media screen and (max-width: 768px) {

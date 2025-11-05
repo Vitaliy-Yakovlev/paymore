@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
-import ArrowSvg from '../../img/arrow-nex-back.svg';
 import Button from '../Button';
 import ButtonRadio from '../ButtonRadio';
 import Checkbox from '../Checkbox';
@@ -166,7 +165,7 @@ const DeviceDetail: React.FC<DeviceDetailProps> = ({ device, deviceVariants, cat
           }}
         >
           <svg className={'arrow-icon'} width={17} height={16}>
-            <use href={ArrowSvg} />
+            <use href='/img/sprite-icon.svg#arrow-next-back' />
           </svg>
           Go back
         </Button>
@@ -189,7 +188,7 @@ const DeviceDetail: React.FC<DeviceDetailProps> = ({ device, deviceVariants, cat
         >
           Continue
           <svg className={'arrow-icon next'} width={17} height={16}>
-            <use href={ArrowSvg} />
+            <use href='/img/sprite-icon.svg#arrow-next-back' />
           </svg>
         </Button>
       </div>
