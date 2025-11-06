@@ -1,4 +1,3 @@
-import LogoFooter from '../../img/logo.svg';
 import css from './Footer.module.css';
 
 const Footer = () => {
@@ -7,7 +6,7 @@ const Footer = () => {
       <div className={css.wrapperFooter}>
         <p className={css.footerText}>
           <svg className={css.footerLogo} width={25} height={25}>
-            <use href={LogoFooter} />
+            <use href='/img/sprite-icon.svg#logo' />
           </svg>
           You can trust PayMore with your trade-in.
         </p>

@@ -1,28 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { ModelSelectProps } from './types';
-import { Device } from '../../types/category';
-import Mic from '../../img/mic.svg';
-import Voice from '../../img/voice.svg';
-import Next from '../../img/next.svg';
-import ArrowSvg from '../../img/arrow-nex-back.svg';
 import Button from '../Button';
 import css from './ModelSelect.module.css';
 
-const ModelSelect: React.FC<ModelSelectProps> = ({
-  catSpec,
-  subcatKeys,
-  subcategory,
-  setSubcategory,
-  q,
-  setQ,
-  items,
-  lowMatches,
-  category,
-  brand,
-  model,
-  categoryLabel,
-}) => {
+const ModelSelect: React.FC<ModelSelectProps> = ({ q, setQ, items, category, brand, model }) => {
   const [currentPage, setCurrentPage] = useState(0);
   const navigate = useNavigate();
 
@@ -31,6 +13,18 @@ const ModelSelect: React.FC<ModelSelectProps> = ({
   const startIndex = currentPage * ITEMS_PER_PAGE;
   const endIndex = startIndex + ITEMS_PER_PAGE;
   const currentItems = items.slice(startIndex, endIndex);
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    //ʼ Here you can add processing for the selected image
+    // Here you can add logic for processing the image
+    if (file) {
+      console.log('Selected file:', file);
+      const imageUrl = URL.createObjectURL(file);
+      console.log('Image URL:', imageUrl);
+    }
+    // For example, barcode recognition or sending to the server
+  };
 
   const handlePrevious = () => {
     if (currentPage > 0) {
@@ -51,6 +45,10 @@ const ModelSelect: React.FC<ModelSelectProps> = ({
   return (
     <div className={css.wrapperModelSelect}>
       <div className={css.wrapperSearch}>
+        <label className={css.btnAddIcon} title='Select an image'>
+          +
+          <input type='file' accept='image/*' onChange={handleFileSelect} style={{ display: 'none' }} />
+        </label>
         <input
           className={css.inputSearch}
           type='text'
@@ -62,12 +60,12 @@ const ModelSelect: React.FC<ModelSelectProps> = ({
         <div className={css.wrapperBtnIcon}>
           <button className={css.btnIcon} type='button'>
             <svg width={22} height={22}>
-              <use href={Mic} />
+              <use href='/img/sprite-icon.svg#mic' />
             </svg>
           </button>
           <button className={css.btnIcon} type='button'>
             <svg width={24} height={24}>
-              <use href={Voice} />
+              <use href='/img/sprite-icon.svg#voice' />
             </svg>
           </button>
         </div>
@@ -75,13 +73,13 @@ const ModelSelect: React.FC<ModelSelectProps> = ({
 
       <p className={css.subtitle}>
         <svg width={18} height={18}>
-          <use href={Mic} />
+          <use href='/img/sprite-icon.svg#mic' />
         </svg>
         Ai voice assistant. Helps you to enter devices faster{' '}
       </p>
       <p className={css.subtitle}>
         <svg width={18} height={18}>
-          <use href={Voice} />
+          <use href='/img/sprite-icon.svg#voice' />
         </svg>
         Barcode reader. Upload image or scan barcode on your device{' '}
       </p>
@@ -114,7 +112,7 @@ const ModelSelect: React.FC<ModelSelectProps> = ({
 
               <strong className={css.deviceLabel}>{item.label}</strong>
               <svg className={css.nextIcon} width={9} height={16}>
-                <use href={Next} />
+                <use href='/img/sprite-icon.svg#next-step' />
               </svg>
             </div>
           </li>
@@ -125,14 +123,14 @@ const ModelSelect: React.FC<ModelSelectProps> = ({
       <div className='wrapper-btn-step' style={{ marginTop: '30px' }}>
         <Button onClick={handlePrevious} disabled={currentPage === 0}>
           <svg className={'arrow-icon'} width={17} height={16}>
-            <use href={ArrowSvg} />
+            <use href='/img/sprite-icon.svg#arrow-next-back' />
           </svg>
           Previous
         </Button>
         <Button onClick={handleNext} disabled={currentPage >= totalPages - 1}>
           Next Page
           <svg className={'arrow-icon next'} width={17} height={16}>
-            <use href={ArrowSvg} />
+            <use href='/img/sprite-icon.svg#arrow-next-back' />
           </svg>
         </Button>
       </div>

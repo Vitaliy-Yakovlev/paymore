@@ -8,16 +8,6 @@ interface CardProps {
 }
 
 const Card: React.FC<CardProps> = ({ category }) => {
-  const img: { [key: string]: string } = {
-    'Apple MacBooks': 'https://cdn.sellit9.com/assets/categories/apple-macbook/apple-macbook.png',
-    'Apple iPhones': 'https://cdn.sellit9.com/assets/categories/apple-iphone/apple-iphone.png',
-    'Android Smartphones': 'https://cdn.sellit9.com/assets/categories/samsung-smartphone/samsung-smartphone.png',
-    Laptops: 'https://cdn.sellit9.com/assets/categories/microsoft-surface-laptop/microsoft-surface-laptop.png',
-    'Sony Gaming Consoles': 'https://cdn.sellit9.com/assets/categories/sony-gaming-console/sony-gaming-console.png',
-    Headphones: 'https://cdn.sellit9.com/assets/categories/beats-headphones/beats-headphones.png',
-    'Apple Watch': 'https://cdn.sellit9.com/assets/categories/apple-apple-watch/apple-apple-watch.png',
-    'Speakers & Audio': 'https://cdn.sellit9.com/assets/categories/shure-podcast-equipment/shure-podcast-equipment.png',
-  };
   const navigate = useNavigate();
 
   const handleClick = () => {
@@ -33,15 +23,13 @@ const Card: React.FC<CardProps> = ({ category }) => {
     });
   };
 
+  const pathImg = `/img/category/${category.label.replace(/[\s/]+/g, '_')}`;
+
   return (
     <div className={css.wrapperCard} onClick={handleClick}>
       <h3 className={css.title}>{category.label}</h3>
       <div className={css.imageWrapper}>
-        <img
-          className={css.image}
-          src={img[category.label] || 'https://cdn.sellit9.com/assets/categories/apple-macbook/apple-macbook.png'}
-          alt={category.label}
-        />
+        <img className={css.image} src={`${pathImg}.png`} srcSet={`${pathImg}.png 1x, ${pathImg}2x.png 2x`} alt={category.label} />
       </div>
     </div>
   );

@@ -1,6 +1,5 @@
 import React from 'react';
 import { Link } from 'react-router';
-import Logo from '../../img/main-logo.svg';
 import css from './Header.module.css';
 
 const Header: React.FC = () => {
@@ -8,7 +7,7 @@ const Header: React.FC = () => {
     <header className={css.header}>
       <Link to='/category'>
         <svg className={css.headerLogo}>
-          <use href={Logo} />
+          <use href='/img/sprite-icon.svg#main-logo' />
         </svg>
       </Link>
     </header>

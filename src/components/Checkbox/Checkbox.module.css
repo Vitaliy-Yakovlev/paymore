@@ -22,7 +22,7 @@
   border-radius: 3px;
 
   background-color: #45b549;
-  background-image: url('../../img/checked-icon.svg');
+  background-image: url('../../../public/img/checked-icon.svg');
   background-size: 11px 9px;
   background-repeat: no-repeat;
   background-position: center;
