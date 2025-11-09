@@ -120,7 +120,7 @@
 .list {
   display: grid;
   grid-template-columns: 1fr;
-  grid-template-rows: 70px;
+  grid-template-rows: repeat(auto-fill, 70px);
   gap: 8px;
   list-style: none;
   margin: 20px 0 0 0;

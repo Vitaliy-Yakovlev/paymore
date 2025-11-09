@@ -32,3 +32,7 @@ declare module '*.jpeg' {
   const content: string;
   export default content;
 }
+
+// React types
+/// <reference types="react" />
+/// <reference types="react-dom" />

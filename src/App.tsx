@@ -2,9 +2,6 @@ import React, { useEffect, useMemo, useRef, useState, useCallback, lazy, Suspens
 import { Routes, Route, Navigate } from 'react-router';
 import { RotatingLines } from 'react-loader-spinner';
 import {
-  ChevronRight,
-  ArrowRight,
-  ArrowLeft,
   Smartphone,
   Laptop,
   Gamepad2,
@@ -16,24 +13,23 @@ import {
   ScanFace,
   Camera,
   Speaker,
-  Mic,
-  Upload,
-  Phone,
-  Info,
-  ArrowUpDown,
-  Container,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { SuccessPage } from './page/SuccessPage';
 import { ErrorPage } from './page/ErrorPage';
-import { useCategories } from './hooks/useCategories';
+
 import { useAuth, useSupabase } from './hooks/useSupabase';
 import { getPriceForDevice } from './utils/priceListService';
+
+import { useSubcategories } from './hooks/useSubcategories';
+import { useDevices } from './hooks/useDevices';
+import { useCategories } from './hooks/useCategories';
+
 import Header from './components/Header';
 import Footer from './components/Footer';
+import OfferClaimPage from './page/OfferClaimPage';
 
 import './App.css';
-import OfferClaimPage from './page/OfferClaimPage';
 
 const HomePage = lazy(() => import('./page/HomePage'));
 const DevicePage = lazy(() => import('./page/DevicePage'));
@@ -248,9 +244,13 @@ function buildBarcodeLookupUrl(code: string) {
 // ---------------- Main App ----------------
 export default function App() {
   // Supabase hooks
+  const [selectedSubcategory, setSelectedSubcategory] = useState<number | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const { user } = useAuth();
   const { insertData } = useSupabase();
-  const { categories, subcategories, devices, loading: categoriesLoading, error: categoriesError } = useCategories();
+  const { categories } = useCategories();
+  const { subcategories } = useSubcategories(selectedCategory);
+  const { devices } = useDevices(selectedSubcategory);
 
   const [step, setStep] = useState(1);
   const [mode, setMode] = useState<'sell' | 'buy'>('sell');
@@ -340,18 +340,21 @@ export default function App() {
     const cat = categories.find(c => c.key === category);
     if (!cat) return {};
 
+    const safeSubcategories = subcategories || [];
+    const safeDevices = devices || [];
+
     return {
       label: cat.label,
-      subcategories: subcategories
+      subcategories: safeSubcategories
         .filter((sub: any) => sub.category_id === cat.id)
         .reduce((acc: any, sub: any) => {
           acc[sub.key] = {
             label: sub.label,
-            items: devices.filter((d: any) => d.subcategory_id === sub.id),
+            items: safeDevices.filter((d: any) => d.subcategory_id === sub.id),
           };
           return acc;
         }, {}),
-      items: devices.filter((d: any) => d.category_id === cat.id && !d.subcategory_id),
+      items: safeDevices.filter((d: any) => d.category_id === cat.id && !d.subcategory_id),
     };
   }, [categories, subcategories, devices, category]);
   const subcatKeys = useMemo(() => Object.keys(catSpec.subcategories || {}), [catSpec]);
@@ -845,68 +848,14 @@ export default function App() {
     setIsSubmitting(true);
     const payload = buildExportPayload();
 
-    // Save quote to Supabase
-    let supabaseSuccess = false;
+    // Note: Supabase quotes saving removed - using fallback methods only
+    let success = false;
+
     try {
-      await insertData('quotes', {
-        // Main quote information
-        store: payload.store,
-        mode: payload.mode,
-        category: payload.category,
-        subcategory: payload.subcategory,
-
-        // Device information
-        device_name: payload.device_label || payload.barcode_lookup?.title || null,
-        brand: payload.brand || payload.barcode_lookup?.brand || null,
-        model: payload.model || payload.barcode_lookup?.model || null,
-        model_code: payload.model_code_entered || payload.barcode_lookup?.mpn || null,
-
-        // Device details
-        condition: payload.details.condition || null,
-        battery_percentage: payload.details.battery || null,
-        has_original_box: payload.details.hasBox || false,
-        has_original_charger: payload.details.hasCharger || false,
-        unlocked: payload.details.unlocked || true,
-
-        // Identifiers
-        imei: payload.identifiers.imei || null,
-        serial_number: payload.identifiers.serial || null,
-
-        // Price and eligibility
-        quote_amount: payload.quote_cad || null,
-        is_eligible: payload.thresholds.eligible || false,
-        buy_min_threshold: payload.thresholds.MIN_PURCHASE,
-        resale_floor_threshold: payload.thresholds.MIN_RESALE,
-
-        // Customer information
-        customer_first_name: payload.customer.first || null,
-        customer_last_name: payload.customer.last || null,
-        customer_email: payload.customer.email || null,
-        customer_phone: payload.customer.phone || null,
-        is_business_customer: payload.customer.isBusiness || false,
-        business_quantity: payload.customer.bizQty || 1,
-
-        // Barcode lookup information
-        barcode: payload.barcode_lookup?.barcode || null,
-        barcode_title: payload.barcode_lookup?.title || null,
-
-        // Rewards
-        rewards_code: payload.rewards.code || null,
-
-        // Metadata
-        user_id: user?.id || null,
-        created_at: new Date().toISOString(),
-        status: 'pending',
-      });
-      supabaseSuccess = true;
-    } catch (error) {
-      console.error('Error saving to Supabase:', error);
-      supabaseSuccess = false;
-    }
-
-    // Fallback only if Supabase failed
-    if (!supabaseSuccess) {
-      if (!SHEET_WEBHOOK) {
+      if (SHEET_WEBHOOK) {
+        await postToSheet(payload);
+        success = true;
+      } else {
         // Fallback: download sample JSON for testing
         const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
@@ -915,14 +864,16 @@ export default function App() {
         a.download = 'paymore_quote_sample.json';
         a.click();
         URL.revokeObjectURL(url);
-      } else {
-        await postToSheet(payload);
+        success = true;
       }
+    } catch (error) {
+      console.error('Error saving quote:', error);
+      success = false;
     }
 
     // Show result screen
     setIsSubmitting(false);
-    if (supabaseSuccess) {
+    if (success) {
       setShowSuccess(true);
       launchConfetti();
     } else {
@@ -930,11 +881,7 @@ export default function App() {
     }
 
     // Reward sequence
-    if (supabaseSuccess) {
-      setBannerText('Your quote has been saved successfully! Cash payment locked for 24 hours.');
-    } else {
-      setBannerText('Your cash payment has been locked down for 24 hours.');
-    }
+    setBannerText('Your cash payment has been locked down for 24 hours.');
     try {
       if (audioRef.current) {
         audioRef.current.currentTime = SOUND_START;
