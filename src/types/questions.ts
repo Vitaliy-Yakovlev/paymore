@@ -5,6 +5,17 @@ export interface QuestionAnswer {
   is_active: boolean;
 }
 
+export interface QuestionDeviceVariant {
+  created_at: string;
+  device_id: number;
+  id: number;
+  is_active: boolean;
+  label: string;
+  price: number;
+  storage: string;
+  updated_at: string;
+}
+
 export interface CategoricalQuestion {
   id: number;
   question: string;

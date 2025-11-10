@@ -265,11 +265,8 @@ export const getPriceForDevice = async (
 
     if (error) {
       console.error('Error fetching price for device:', error);
-      console.log('Query parameters:', { deviceName, storage });
       return null;
     }
-
-    console.log('Found device data:', data);
 
     const result = await calculateFinalPrice(data, {
       condition: condition,
@@ -279,7 +276,6 @@ export const getPriceForDevice = async (
       battery_percentage: batteryPercentage,
     });
 
-    console.log('Final calculated result:', result);
     return result;
   } catch (error) {
     console.error('Error in getPriceForDevice:', error);

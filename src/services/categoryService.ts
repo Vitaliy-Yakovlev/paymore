@@ -106,16 +106,15 @@ export async function getCategorialQuestions(categoryId: number | null, deviceId
           id,
           question_id,
           value,
-          is_active
+          is_active,
+          weight,
+          weight_type
         )
       `);
 
     if (categoryId !== null) {
       query = query.eq('category_id', categoryId);
     }
-
-    // For now, we'll ignore deviceId as the current schema doesn't support device-specific questions
-    // TODO: Add device-specific filtering when schema supports it
 
     const { data, error } = await query.order('id');
 
@@ -128,6 +127,28 @@ export async function getCategorialQuestions(categoryId: number | null, deviceId
   } catch (error) {
     console.error('💥 getCategorialQuestions failed:', error);
     throw error;
+  }
+}
+
+// Get device variants for a specific device
+export async function getDeviceVariants(deviceId: number): Promise<Database['public']['Tables']['device_variants']['Row'][]> {
+  try {
+    const { data, error } = await supabase
+      .from('device_variants')
+      .select('*')
+      .eq('device_id', deviceId)
+      .eq('is_active', true)
+      .order('label');
+
+    if (error) {
+      console.error('Error fetching device variants:', error);
+      return [];
+    }
+
+    return data || [];
+  } catch (error) {
+    console.error('Error in getDeviceVariants:', error);
+    return [];
   }
 }
 

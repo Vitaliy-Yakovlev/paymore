@@ -40,7 +40,7 @@ const DevicePage: React.FC = () => {
   // Get devices for the selected subcategory or category
   const { devices: subcategoryDevices, loading: loadingSubcategoryDevices } = useDevicesBySubcategory(selectedSubcategoryId);
   const { devices: categoryDevices, loading: loadingCategoryDevices } = useDevices(selectedSubcategoryId ? null : selectedCategoryId);
-  const { categorialQuestions } = useCategorialQuestions(selectedCategoryId, null);
+
   // Use devices from subcategory if selected, otherwise from category
   const devices = useMemo(() => {
     if (selectedSubcategoryId && subcategoryDevices) {
@@ -70,9 +70,9 @@ const DevicePage: React.FC = () => {
       return deviceSlug === deviceName.toLowerCase();
     });
   }, [deviceName, devices]);
-
   // Get variants for the selected device
   const { loading: loadingVariants } = useVariants(selectedDevice?.id || null);
+  const { categorialQuestions } = useCategorialQuestions(selectedCategoryId, selectedDevice?.id || null);
 
   // Combined loading state
   const loading = loadingCategories || loadingSubcategories || loadingCategoryDevices || loadingSubcategoryDevices || loadingVariants;
@@ -146,7 +146,14 @@ const DevicePage: React.FC = () => {
       {!loading && !error && (
         <StepContainer step={step}>
           {!loading && !error && catSpec.label && selectedDevice && (
-            <DeviceDetail device={selectedDevice} categorialQuestions={categorialQuestions} step={step} setStep={setStep} />
+            <DeviceDetail
+              device={selectedDevice}
+              categorialQuestions={categorialQuestions}
+              step={step}
+              setStep={setStep}
+              selectedCategoryId={selectedCategoryId}
+              selectedDeviceId={selectedDevice.id}
+            />
           )}
           {!loading && !error && catSpec.label && !selectedDevice && step === 1 && (
             <ModelSelect
