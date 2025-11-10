@@ -4,7 +4,18 @@ import { ModelSelectProps } from './types';
 import Button from '../Button';
 import css from './ModelSelect.module.css';
 
-const ModelSelect: React.FC<ModelSelectProps> = ({ q, setQ, items, category, brand, model }) => {
+const ModelSelect: React.FC<ModelSelectProps> = ({
+  catSpec,
+  subcatKeys,
+  subcategory,
+  setSubcategory,
+  q,
+  setQ,
+  items,
+  category,
+  brand,
+  model,
+}) => {
   const [currentPage, setCurrentPage] = useState(0);
   const navigate = useNavigate();
 
@@ -16,12 +27,10 @@ const ModelSelect: React.FC<ModelSelectProps> = ({ q, setQ, items, category, bra
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    //ʼ Here you can add processing for the selected image
+    // Here you can add processing for the selected image
     // Here you can add logic for processing the image
     if (file) {
-      console.log('Selected file:', file);
       const imageUrl = URL.createObjectURL(file);
-      console.log('Image URL:', imageUrl);
     }
     // For example, barcode recognition or sending to the server
   };
@@ -85,6 +94,24 @@ const ModelSelect: React.FC<ModelSelectProps> = ({ q, setQ, items, category, bra
       </p>
 
       <p className={css.title}>Choose device model</p>
+
+      {/* Subcategory selector */}
+      {subcatKeys.length > 0 && (
+        <div className={css.subcategorySelector}>
+          <p className={css.subcategoryTitle}>Choose subcategory:</p>
+          <div className={css.subcategoryButtons}>
+            {subcatKeys.map(key => (
+              <button
+                key={key}
+                className={`${css.subcategoryButton} ${subcategory === key ? css.active : ''}`}
+                onClick={() => setSubcategory(key)}
+              >
+                {catSpec.subcategories[key]?.label || key}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       <ul className={css.list}>
         {currentItems.map((item: any) => (

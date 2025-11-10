@@ -39,3 +39,11 @@ export interface Device {
   created_at: string;
   updated_at: string;
 }
+
+export interface DeviceWithVariants extends Device {
+  storage?: string;
+  condition?: string;
+  storageOptions?: string[];
+  sale_price?: number;
+  battery_percentage?: number;
+}

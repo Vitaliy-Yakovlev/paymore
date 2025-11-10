@@ -1,32 +1,31 @@
 import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
+import { QuestionAnswer, CategoricalQuestionWithAnswers } from '../../types/questions';
+import { DeviceWithVariants } from '../../types/category';
 import Button from '../Button';
 import ButtonRadio from '../ButtonRadio';
 import Checkbox from '../Checkbox';
 import css from './DeviceDetail.module.css';
 
 interface DeviceDetailProps {
-  device: any;
-  deviceVariants: any[];
-  catSpec: any;
-  category: string;
+  device: DeviceWithVariants;
+  categorialQuestions: CategoricalQuestionWithAnswers[];
   step: number;
   setStep: React.Dispatch<React.SetStateAction<number>>;
 }
 
-const DeviceDetail: React.FC<DeviceDetailProps> = ({ device, deviceVariants, catSpec, category, step, setStep }) => {
+const DeviceDetail: React.FC<DeviceDetailProps> = ({ device, categorialQuestions, step, setStep }) => {
   const navigate = useNavigate();
   const { brand, model } = useParams();
-  const [selectedStorage, setSelectedStorage] = useState<string | number>(device.storage);
-  const [selectedCondition, setSelectedCondition] = useState<string | number>(device.condition);
+  const [selectedStorage, setSelectedStorage] = useState<string | number>(device.storage || '');
+  const [selectedCondition, setSelectedCondition] = useState<string | number>(device.condition || '');
+  const [batteryHealth, setBatteryHealth] = useState<number>(74);
   const [additionalDetails, setAdditionalDetails] = useState<{ [key: string]: boolean }>({
     charger_included: false,
     box_included: false,
     device_unlocked: false,
     nothing_of_these: false,
   });
-
-  const [batteryHealth, setBatteryHealth] = useState<number>(74);
 
   const handleStorageChange = (value: string | number) => {
     setSelectedStorage(prev => (value === prev ? '' : value));
@@ -35,6 +34,18 @@ const DeviceDetail: React.FC<DeviceDetailProps> = ({ device, deviceVariants, cat
   const handleConditionChange = (value: string | number) => {
     setSelectedCondition(prev => (value === prev ? '' : value));
   };
+
+  const optionsStorage: string[] =
+    (categorialQuestions || [])
+      .find(question => question.question.toLowerCase().includes('storage size'))
+      ?.question_answers?.map((answer: QuestionAnswer) => answer.value)
+      ?.sort((a: string, b: string) => {
+        // Try to parse storage as numbers for sorting (e.g., "128GB" -> 128)
+        const aSize = parseInt(a) || 0;
+        const bSize = parseInt(b) || 0;
+        return aSize - bSize;
+      }) || [];
+
   return (
     <div>
       <div className={css.wrapperDeviceHeader}>
@@ -47,109 +58,89 @@ const DeviceDetail: React.FC<DeviceDetailProps> = ({ device, deviceVariants, cat
         </div>
       </div>
 
-      {step === 2 && (
-        <div>
-          <p className={css.title}>Additional details</p>
+      <>
+        {categorialQuestions.length !== 0 &&
+          categorialQuestions.map(question => {
+            return (
+              <>
+                {step === 2 && ['storage size', 'additional details', 'battery health'].includes(question.question.toLowerCase()) && (
+                  <div>
+                    {question.question && <p className={css.title}>{question.question}</p>}
 
-          <div className={css.wrapperCheckbox}>
-            <Checkbox
-              label={'Charger included'}
-              checked={additionalDetails.charger_included}
-              onChange={() => {
-                setAdditionalDetails(prev => ({
-                  ...prev,
-                  charger_included: !prev.charger_included,
-                  nothing_of_these: false,
-                }));
-              }}
-            />
+                    {question.question === 'Storage Size' && optionsStorage.length !== 0 && (
+                      <div className={css.wrapperRadioBtn}>
+                        <ButtonRadio options={optionsStorage} value={selectedStorage} onChange={handleStorageChange} />
+                      </div>
+                    )}
 
-            <Checkbox
-              label={'Box Included'}
-              checked={additionalDetails.box_included}
-              onChange={() => {
-                setAdditionalDetails(prev => ({
-                  ...prev,
-                  box_included: !prev.box_included,
-                  nothing_of_these: false,
-                }));
-              }}
-            />
+                    {question?.question_answers.length !== 0 &&
+                      question?.question_answers.map((answer: QuestionAnswer) => {
+                        if (question.question.toLowerCase().includes('additional details')) {
+                          return (
+                            <div key={answer.id} className={css.wrapperCheckbox}>
+                              <Checkbox
+                                label={answer.value}
+                                checked={additionalDetails[answer.value] || false}
+                                onChange={() => {
+                                  setAdditionalDetails(prev => ({
+                                    ...prev,
+                                    [answer.value]: !prev[answer.value],
+                                    nothing_of_these: false,
+                                  }));
+                                }}
+                              />
+                            </div>
+                          );
+                        }
+                        return null;
+                      })}
 
-            <Checkbox
-              label={'Device is unlocked'}
-              checked={additionalDetails.device_unlocked}
-              onChange={() => {
-                setAdditionalDetails(prev => ({
-                  ...prev,
-                  device_unlocked: !prev.device_unlocked,
-                  nothing_of_these: false,
-                }));
-              }}
-            />
+                    {question.question.toLowerCase().includes('battery health') && (
+                      <>
+                        <p className={css.description}>{question.description}</p>
+                        <p className={css.title} style={{ marginBottom: '12px' }}>
+                          Battery % (if applicable)
+                        </p>
 
-            <Checkbox
-              label={'Nothing of these'}
-              checked={additionalDetails.nothing_of_these}
-              onChange={() => {
-                if (!additionalDetails.nothing_of_these) {
-                  setAdditionalDetails({
-                    charger_included: false,
-                    box_included: false,
-                    device_unlocked: false,
-                    nothing_of_these: true,
-                  });
-                  return;
-                }
-                setAdditionalDetails(prev => ({
-                  ...prev,
-                  nothing_of_these: !prev.nothing_of_these,
-                }));
-              }}
-            />
-          </div>
+                        <div className={css.sliderContainer}>
+                          <input
+                            className={css.batterySlider}
+                            onChange={e => setBatteryHealth(Number(e.target.value))}
+                            type='range'
+                            min='0'
+                            max='100'
+                            value={batteryHealth}
+                            style={{
+                              background: `linear-gradient(to right, #45B549 0%, #45B549 ${batteryHealth}%, #E0E0E0 ${batteryHealth}%, #E0E0E0 100%)`,
+                            }}
+                          />
+                        </div>
+                        <p className={css.currentText}>Current: {batteryHealth}%</p>
+                      </>
+                    )}
+                  </div>
+                )}
 
-          <p className={css.title}>Storage size</p>
+                {step === 3 && question.question.toLowerCase().includes('condition') && (
+                  <>
+                    <p className={css.text}>{question.description}</p>
 
-          <div className={css.wrapperRadioBtn}>
-            <ButtonRadio options={['128GB', '256GB', '512GB', '1TB']} value={selectedStorage} onChange={handleStorageChange} />
-          </div>
+                    <div className={css.wrapperBntRadio}>
+                      {question.question_answers && question.question_answers.length !== 0 && (
+                        <ButtonRadio
+                          options={question.question_answers.map((answer: QuestionAnswer) => answer.value)}
+                          value={selectedCondition}
+                          onChange={handleConditionChange}
+                        />
+                      )}
+                    </div>
+                  </>
+                )}
+              </>
+            );
+          })}
+      </>
 
-          <p className={css.title} style={{ marginBottom: '0px' }}>
-            Battery health
-          </p>
-          <p className={css.description}>Move the slider to match the battery’s “Maximum Capacity”</p>
-
-          <p className={css.title} style={{ marginBottom: '12px' }}>
-            Battery % (if applicable)
-          </p>
-
-          <div className={css.sliderContainer}>
-            <input
-              className={css.batterySlider}
-              onChange={e => setBatteryHealth(Number(e.target.value))}
-              type='range'
-              min='0'
-              max='100'
-              value={batteryHealth}
-              style={{
-                background: `linear-gradient(to right, #45B549 0%, #45B549 ${batteryHealth}%, #E0E0E0 ${batteryHealth}%, #E0E0E0 100%)`,
-              }}
-            />
-          </div>
-          <p className={css.currentText}>Current: {batteryHealth}%</p>
-        </div>
-      )}
-
-      {step === 3 && (
-        <>
-          <p className={css.text}>Choose the correct condition to get an accurate quote for your device trade-in.</p>
-
-          <div className={css.wrapperBntRadio}>
-            <ButtonRadio options={['Flawless', 'Good', 'Fair']} value={selectedCondition} onChange={handleConditionChange} />
-          </div>
-        </>
-      )}
       <div className='wrapper-btn-step' style={{ marginTop: '30px' }}>
         <Button
           onClick={() => {
@@ -179,12 +170,41 @@ const DeviceDetail: React.FC<DeviceDetailProps> = ({ device, deviceVariants, cat
             navigate('/summary');
           }}
           disabled={
-            step === 2 ? !selectedStorage || Object.values(additionalDetails).every(element => element === false) : !selectedCondition
+            step === 2
+              ? (() => {
+                  const hasStorageQuestion = categorialQuestions.some(q => q.question.toLowerCase().includes('storage size'));
+                  const hasAdditionalDetailsQuestion = categorialQuestions.some(q =>
+                    q.question.toLowerCase().includes('additional details'),
+                  );
+
+                  const storageValid = !hasStorageQuestion || Boolean(selectedStorage);
+                  const additionalDetailsValid =
+                    !hasAdditionalDetailsQuestion || Object.values(additionalDetails).some(element => element === true);
+
+                  return !storageValid || !additionalDetailsValid;
+                })()
+              : (() => {
+                  const hasConditionQuestion = categorialQuestions.some(q => q.question.toLowerCase().includes('condition'));
+                  return hasConditionQuestion ? !selectedCondition : false;
+                })()
           }
-          active={
-            (Boolean(selectedStorage) && Object.values(additionalDetails).includes(true) && step === 2) ||
-            (step === 3 && Boolean(selectedCondition))
-          }
+          active={(() => {
+            if (step === 2) {
+              const hasStorageQuestion = categorialQuestions.some(q => q.question.toLowerCase().includes('storage size'));
+              const hasAdditionalDetailsQuestion = categorialQuestions.some(q => q.question.toLowerCase().includes('additional details'));
+
+              const storageValid = !hasStorageQuestion || Boolean(selectedStorage);
+              const additionalDetailsValid =
+                !hasAdditionalDetailsQuestion || Object.values(additionalDetails).some(element => element === true);
+
+              return storageValid && additionalDetailsValid;
+            }
+            if (step === 3) {
+              const hasConditionQuestion = categorialQuestions.some(q => q.question.toLowerCase().includes('condition'));
+              return hasConditionQuestion ? Boolean(selectedCondition) : true;
+            }
+            return false;
+          })()}
         >
           Continue
           <svg className={'arrow-icon next'} width={17} height={16}>
