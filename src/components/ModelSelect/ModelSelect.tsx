@@ -30,7 +30,10 @@ const ModelSelect: React.FC<ModelSelectProps> = ({
     // Here you can add processing for the selected image
     // Here you can add logic for processing the image
     if (file) {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const imageUrl = URL.createObjectURL(file);
+      // TODO: Add image processing logic here
+      // console.log('Selected image URL:', imageUrl);
     }
     // For example, barcode recognition or sending to the server
   };

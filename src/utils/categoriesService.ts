@@ -128,12 +128,7 @@ export const getDevicesBySubcategory = async (subcategoryId: number): Promise<De
 // Find device by key from unified price_list table
 export const getDeviceByKey = async (key: string): Promise<Device | null> => {
   try {
-    const { data, error } = await supabase
-      .from('price_list')
-      .select('*')
-      .eq('device_key', key)
-      .eq('is_active', true)
-      .single();
+    const { data, error } = await supabase.from('price_list').select('*').eq('device_key', key).eq('is_active', true).single();
 
     if (error) {
       console.error('Error fetching device by key:', error);
@@ -152,6 +147,7 @@ export const getDeviceByKey = async (key: string): Promise<Device | null> => {
       buy_min: data.buy_min,
       resale_floor: data.resale_floor,
       icon: data.icon,
+      device_image: data.device_image,
       category_id: data.category_id,
       subcategory_id: data.subcategory_id,
       is_active: data.is_active || true,
@@ -225,12 +221,7 @@ export const getCategoryByKey = async (key: string): Promise<Category | null> =>
 // Get subcategory by key
 export const getSubcategoryByKey = async (key: string): Promise<Subcategory | null> => {
   try {
-    const { data, error } = await supabase
-      .from('subcategories')
-      .select('*')
-      .eq('key', key)
-      .eq('is_active', true)
-      .single();
+    const { data, error } = await supabase.from('subcategories').select('*').eq('key', key).eq('is_active', true).single();
 
     if (error) {
       console.error('Error fetching subcategory by key:', error);
@@ -276,6 +267,7 @@ export const buildCatalogStructure = async () => {
                 buy_min: device.buy_min || 0,
                 resale_floor: device.resale_floor || 0,
                 icon: device.icon || 'smartphone',
+                device_image: device.device_image || '',
                 storage: device.storage || '128GB', // Add storage info
                 storageOptions: [], // Array to store all storage options
               };

@@ -2,12 +2,12 @@ export interface Category {
   id: number;
   key: string;
   label: string;
-  icon?: string;
-  parent_id?: number | null;
-  sort_order: number;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
+  icon: string | null;
+  parent_id: number | null;
+  sort_order: number | null;
+  is_active: boolean | null;
+  created_at: string | null;
+  updated_at: string | null;
 }
 
 export interface Subcategory {
@@ -15,10 +15,10 @@ export interface Subcategory {
   key: string;
   label: string;
   category_id: number;
-  sort_order: number;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
+  sort_order: number | null;
+  is_active: boolean | null;
+  created_at: string | null;
+  updated_at: string | null;
 }
 
 export interface Device {
@@ -27,17 +27,17 @@ export interface Device {
   label: string;
   brand: string;
   model: string;
-  gtin?: string;
-  mpn?: string;
-  buy_min?: number;
-  resale_floor?: number;
-  icon?: string;
-  device_image?: string;
-  category_id?: number;
-  subcategory_id?: number;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
+  gtin: string | null;
+  mpn: string | null;
+  buy_min: number | null;
+  resale_floor: number | null;
+  icon: string | null;
+  device_image: string | null;
+  category_id: number | null;
+  subcategory_id: number | null;
+  is_active: boolean | null;
+  created_at: string | null;
+  updated_at: string | null;
 }
 
 export interface DeviceWithVariants extends Device {
