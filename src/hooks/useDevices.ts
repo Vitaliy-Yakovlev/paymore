@@ -11,7 +11,7 @@ import {
 
 export function useVariants(deviceId: number | null) {
   const [variants, setVariants] = useState<DeviceVariant[]>([]);
-  const [characteristics, setCharacteristics] = useState<Record<number, DeviceCharacteristic[]>>({});
+  const [characteristics /* setCharacteristics */] = useState<Record<number, DeviceCharacteristic[]>>({});
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {

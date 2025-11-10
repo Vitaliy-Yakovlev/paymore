@@ -1,19 +1,19 @@
 import React, { useEffect, useMemo, useRef, useState, useCallback, lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router';
 import { RotatingLines } from 'react-loader-spinner';
-import {
-  Smartphone,
-  Laptop,
-  Gamepad2,
-  Headphones as HeadphonesIcon,
-  Music2,
-  Monitor,
-  Cpu,
-  Keyboard,
-  ScanFace,
-  Camera,
-  Speaker,
-} from 'lucide-react';
+// import {
+//   Smartphone,
+//   Laptop,
+//   Gamepad2,
+//   Headphones as HeadphonesIcon,
+//   Music2,
+//   Monitor,
+//   Cpu,
+//   Keyboard,
+//   ScanFace,
+//   Camera,
+//   Speaker,
+// } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { SuccessPage } from './page/SuccessPage';
 import { ErrorPage } from './page/ErrorPage';
@@ -56,9 +56,9 @@ const MIN_PURCHASE = 100; // CAD buy floor
 const MIN_RESALE = 200; // CAD resale floor
 
 const STORE_NAME = 'PayMore Toronto Downtown';
-const PAYMORE_LOCAL_E164 = '+14168154588';
-const PAYMORE_LOCAL_HUMAN = '(416) 815-4588';
-const STORE_GOOGLE_MAPS = 'https://www.google.com/maps/search/?api=1&query=PayMore+Toronto+Downtown';
+// const PAYMORE_LOCAL_E164 = '+14168154588';
+// const PAYMORE_LOCAL_HUMAN = '(416) 815-4588';
+// const STORE_GOOGLE_MAPS = 'https://www.google.com/maps/search/?api=1&query=PayMore+Toronto+Downtown';
 
 // Theme
 // const CTA_GREEN = "bg-emerald-600 hover:bg-emerald-700 focus:ring-emerald-500";
@@ -68,8 +68,8 @@ const SHEET_WEBHOOK = (typeof window !== 'undefined' && (window as any).PAYMORE_
 
 // Thank-you + audio configuration (override at runtime with window.*)
 const THANKYOU_URL = (typeof window !== 'undefined' && (window as any).PAYMORE_THANKYOU_URL) || '/thank-you/quote-locked';
-const SOUND_URL = (typeof window !== 'undefined' && (window as any).PAYMORE_SOUND_URL) || '/assets/locked-chime.mp3'; // ~3s chime
-const CASH_SOUND_URL = (typeof window !== 'undefined' && (window as any).PAYMORE_CASH_SOUND_URL) || '/assets/cash-register.mp3';
+// const SOUND_URL = (typeof window !== 'undefined' && (window as any).PAYMORE_SOUND_URL) || '/assets/locked-chime.mp3'; // ~3s chime
+// const CASH_SOUND_URL = (typeof window !== 'undefined' && (window as any).PAYMORE_CASH_SOUND_URL) || '/assets/cash-register.mp3';
 const SOUND_START = (typeof window !== 'undefined' && (window as any).PAYMORE_SOUND_START_SEC) || 0; // seconds
 // Removed SOUND_DURATION_MS as it's no longer used
 // const COIN_URL = (typeof window !== "undefined" && (window as any).PAYMORE_COIN_URL) || "/assets/paymore-coin.png";
@@ -81,59 +81,59 @@ const BARCODELOOKUP_URL =
 const BARCODELOOKUP_PROXY = (typeof window !== 'undefined' && (window as any).PAYMORE_BARCODELOOKUP_PROXY) || null; // if you deploy Apps Script proxy
 
 // ---------------- Tiny UI primitives ----------------
-const cn = (...x: Array<string | false | null | undefined>) => x.filter(Boolean).join(' ');
-const SafeIcon = ({ Comp, className = '' }: { Comp: any; className?: string }) =>
-  typeof Comp === 'function' ? <Comp className={className} /> : <span className={cn('inline-block rounded bg-zinc-200', className)} />;
+// const cn = (...x: Array<string | false | null | undefined>) => x.filter(Boolean).join(' ');
+// const SafeIcon = ({ Comp, className = '' }: { Comp: any; className?: string }) =>
+//   typeof Comp === 'function' ? <Comp className={className} /> : <span className={cn('inline-block rounded bg-zinc-200', className)} />;
 
-const Shell: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <div className='paymore-container'>
-    <div className='paymore-main'>
-      {/* <div className="paymore-header">
-        <div className="paymore-header-content">
-          <div className="paymore-header-left">
-            <h1 className="paymore-header-title">
-              <img src="/logo.png" alt="PayMore Logo" />
-            </h1>
-          </div>
-          <div className="paymore-header-right">
-            <div className="paymore-header-info-item">
-              <Phone className="paymore-header-info-icon" />
-              Phone
-              <div className="paymore-header-info-tooltip">{PAYMORE_LOCAL_HUMAN}</div>
-            </div>
-            <div className="paymore-header-info-item">
-              <Info className="paymore-header-info-icon" />
-              Address
-              <div className="paymore-header-info-tooltip">577 Yonge St #102, Toronto</div>
-            </div>
-          </div>
-        </div>
-        <div className="paymore-header-nav">
-          <span className="paymore-header-nav-item">Trade‑In</span>
-          <span className="paymore-header-nav-arrow">
-            <ArrowUpDown size={12} />
-          </span>
-          <span className="paymore-header-nav-item active">Live Preview</span>
-        </div>
-      </div> */}
-      <div className='paymore-content'>{children}</div>
-    </div>
-  </div>
-);
+// const Shell: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+//   <div className='paymore-container'>
+//     <div className='paymore-main'>
+//       {/* <div className="paymore-header">
+//         <div className="paymore-header-content">
+//           <div className="paymore-header-left">
+//             <h1 className="paymore-header-title">
+//               <img src="/logo.png" alt="PayMore Logo" />
+//             </h1>
+//           </div>
+//           <div className="paymore-header-right">
+//             <div className="paymore-header-info-item">
+//               <Phone className="paymore-header-info-icon" />
+//               Phone
+//               <div className="paymore-header-info-tooltip">{PAYMORE_LOCAL_HUMAN}</div>
+//             </div>
+//             <div className="paymore-header-info-item">
+//               <Info className="paymore-header-info-icon" />
+//               Address
+//               <div className="paymore-header-info-tooltip">577 Yonge St #102, Toronto</div>
+//             </div>
+//           </div>
+//         </div>
+//         <div className="paymore-header-nav">
+//           <span className="paymore-header-nav-item">Trade‑In</span>
+//           <span className="paymore-header-nav-arrow">
+//             <ArrowUpDown size={12} />
+//           </span>
+//           <span className="paymore-header-nav-item active">Live Preview</span>
+//         </div>
+//       </div> */}
+//       <div className='paymore-content'>{children}</div>
+//     </div>
+//   </div>
+// );
 
-const Card: React.FC<{ className?: string; children: React.ReactNode }> = ({ className = '', children }) => (
-  <div className={cn('paymore-card', className)}>{children}</div>
-);
-const CardHeader: React.FC<{ children: React.ReactNode }> = ({ children }) => <div className='px-5 pt-5'>{children}</div>;
-const CardTitle: React.FC<{ className?: string; children: React.ReactNode }> = ({ className = '', children }) => (
-  <div className={cn('text-base font-semibold text-zinc-900', className)}>{children}</div>
-);
-const CardContent: React.FC<{ className?: string; children: React.ReactNode }> = ({ className = '', children }) => (
-  <div className={cn('px-5 pb-5', className)}>{children}</div>
-);
-const Badge: React.FC<{ className?: string; children: React.ReactNode }> = ({ className = '', children }) => (
-  <span className={cn('paymore-badge', className)}>{children}</span>
-);
+// const Card: React.FC<{ className?: string; children: React.ReactNode }> = ({ className = '', children }) => (
+//   <div className={cn('paymore-card', className)}>{children}</div>
+// );
+// const CardHeader: React.FC<{ children: React.ReactNode }> = ({ children }) => <div className='px-5 pt-5'>{children}</div>;
+// const CardTitle: React.FC<{ className?: string; children: React.ReactNode }> = ({ className = '', children }) => (
+//   <div className={cn('text-base font-semibold text-zinc-900', className)}>{children}</div>
+// );
+// const CardContent: React.FC<{ className?: string; children: React.ReactNode }> = ({ className = '', children }) => (
+//   <div className={cn('px-5 pb-5', className)}>{children}</div>
+// );
+// const Badge: React.FC<{ className?: string; children: React.ReactNode }> = ({ className = '', children }) => (
+//   <span className={cn('paymore-badge', className)}>{children}</span>
+// );
 // const Pill: React.FC<{ className?: string; color?: 'zinc' | 'green' | 'yellow' | 'orange' | 'red'; children: React.ReactNode }> = ({ className = "", color = "zinc", children }) => (
 //   <span className={cn("inline-flex items-center px-3 py-1.5 rounded-full text-[11px] font-semibold border",
 //     color === 'zinc' && "text-zinc-700 bg-zinc-50 border-zinc-200",
@@ -143,80 +143,80 @@ const Badge: React.FC<{ className?: string; children: React.ReactNode }> = ({ cl
 //     color === 'red' && "text-red-700 bg-red-50 border-red-200",
 //     className)}>{children}</span>
 // );
-const Button: React.FC<
-  {
-    variant?: 'solid' | 'ghost' | 'outline';
-    className?: string;
-    children: React.ReactNode;
-  } & React.ButtonHTMLAttributes<HTMLButtonElement>
-> = ({ variant = 'solid', className = '', children, ...props }) => (
-  <button
-    {...props}
-    className={cn(
-      'paymore-button',
-      variant === 'solid' && 'paymore-button-solid',
-      variant === 'ghost' && 'paymore-button-ghost',
-      variant === 'outline' && 'paymore-button-outline',
-      className,
-    )}
-  >
-    {children}
-  </button>
-);
-const Field: React.FC<{ label: string; children: React.ReactNode }> = ({ label, children }) => (
-  <label className='grid gap-1'>
-    <span className='paymore-field-label'>{label}</span>
-    {children}
-  </label>
-);
-const Money: React.FC<{ amount: number; currency?: string }> = ({ amount, currency = 'CAD' }) => (
-  <span className='tabular-nums'>{Number(amount || 0).toLocaleString('en-CA', { style: 'currency', currency })}</span>
-);
+// const Button: React.FC<
+//   {
+//     variant?: 'solid' | 'ghost' | 'outline';
+//     className?: string;
+//     children: React.ReactNode;
+//   } & React.ButtonHTMLAttributes<HTMLButtonElement>
+// > = ({ variant = 'solid', className = '', children, ...props }) => (
+//   <button
+//     {...props}
+//     className={cn(
+//       'paymore-button',
+//       variant === 'solid' && 'paymore-button-solid',
+//       variant === 'ghost' && 'paymore-button-ghost',
+//       variant === 'outline' && 'paymore-button-outline',
+//       className,
+//     )}
+//   >
+//     {children}
+//   </button>
+// );
+// const Field: React.FC<{ label: string; children: React.ReactNode }> = ({ label, children }) => (
+//   <label className='grid gap-1'>
+//     <span className='paymore-field-label'>{label}</span>
+//     {children}
+//   </label>
+// );
+// const Money: React.FC<{ amount: number; currency?: string }> = ({ amount, currency = 'CAD' }) => (
+//   <span className='tabular-nums'>{Number(amount || 0).toLocaleString('en-CA', { style: 'currency', currency })}</span>
+// );
 
 // ---------------- Icons + Categories ----------------
-const ICONS: Record<string, any> = {
-  smartphone: Smartphone,
-  laptop: Laptop,
-  gamepad2: Gamepad2,
-  headphones: HeadphonesIcon,
-  music: Music2,
-  monitor: Monitor,
-  cpu: Cpu,
-  keyboard: Keyboard,
-  scanface: ScanFace,
-  camera: Camera,
-  speaker: Speaker,
-};
-const DeviceIcon: React.FC<{ name?: string }> = ({ name }) => (
-  <SafeIcon Comp={ICONS[name || 'smartphone'] || Smartphone} className='h-6 w-6 text-zinc-700' />
-);
+// const ICONS: Record<string, any> = {
+//   smartphone: Smartphone,
+//   laptop: Laptop,
+//   gamepad2: Gamepad2,
+//   headphones: HeadphonesIcon,
+//   music: Music2,
+//   monitor: Monitor,
+//   cpu: Cpu,
+//   keyboard: Keyboard,
+//   scanface: ScanFace,
+//   camera: Camera,
+//   speaker: Speaker,
+// };
+// const DeviceIcon: React.FC<{ name?: string }> = ({ name }) => (
+//   <SafeIcon Comp={ICONS[name || 'smartphone'] || Smartphone} className='h-6 w-6 text-zinc-700' />
+// );
 
 // Component for displaying device image with fallback
-const DeviceImage: React.FC<{
-  imageUrl?: string;
-  icon?: string;
-  categoryIcon?: string;
-  size?: 'small' | 'medium' | 'large';
-}> = ({ imageUrl, icon, categoryIcon, size = 'medium' }) => {
-  const [imageError, setImageError] = useState(false);
+// const DeviceImage: React.FC<{
+//   imageUrl?: string;
+//   icon?: string;
+//   categoryIcon?: string;
+//   size?: 'small' | 'medium' | 'large';
+// }> = ({ imageUrl, icon, categoryIcon, size = 'medium' }) => {
+//   const [imageError, setImageError] = useState(false);
 
-  const sizeClass = size === 'small' ? 'device-image-small' : size === 'large' ? 'device-image-large' : 'device-image-medium';
+//   const sizeClass = size === 'small' ? 'device-image-small' : size === 'large' ? 'device-image-large' : 'device-image-medium';
 
-  if (imageUrl && !imageError) {
-    return (
-      <div className={`device-image-container ${sizeClass}`}>
-        <img src={imageUrl} alt='Device' className='device-image' onError={() => setImageError(true)} onLoad={() => setImageError(false)} />
-      </div>
-    );
-  }
+//   if (imageUrl && !imageError) {
+//     return (
+//       <div className={`device-image-container ${sizeClass}`}>
+//         <img src={imageUrl} alt='Device' className='device-image' onError={() => setImageError(true)} onLoad={() => setImageError(false)} />
+//       </div>
+//     );
+//   }
 
-  // Fallback to icon
-  return (
-    <div className={`device-image-container fallback ${sizeClass}`}>
-      <DeviceIcon name={icon || categoryIcon || 'smartphone'} />
-    </div>
-  );
-};
+//   // Fallback to icon
+//   return (
+//     <div className={`device-image-container fallback ${sizeClass}`}>
+//       <DeviceIcon name={icon || categoryIcon || 'smartphone'} />
+//     </div>
+//   );
+// };
 
 // ---------------- Utilities ----------------
 async function postToSheet(payload: any) {
@@ -244,10 +244,14 @@ function buildBarcodeLookupUrl(code: string) {
 // ---------------- Main App ----------------
 export default function App() {
   // Supabase hooks
-  const [selectedSubcategory, setSelectedSubcategory] = useState<number | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
-  const { user } = useAuth();
-  const { insertData } = useSupabase();
+  const [selectedSubcategory /* setSelectedSubcategory */] = useState<number | null>(null);
+  const [selectedCategory /* setSelectedCategory */] = useState<number | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { user: /* user */ _user } = useAuth();
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { insertData: /* insertData */ _insertData } = useSupabase();
+
+  /* eslint-disable @typescript-eslint/no-unused-vars */
   const { categories } = useCategories();
   const { subcategories } = useSubcategories(selectedCategory);
   const { devices } = useDevices(selectedSubcategory);
@@ -1780,16 +1784,17 @@ export default function App() {
     //   )}
     // </Shell>
   );
+  /* eslint-enable @typescript-eslint/no-unused-vars */
 }
 
-function Row({ label, value, muted }: { label: string; value: React.ReactNode; muted?: boolean }) {
-  return (
-    <div className='flex items-center justify-between text-sm'>
-      <div className={cn('', muted && 'text-zinc-400')}>{label}</div>
-      <div className={cn('', muted && 'text-zinc-400')}>{value}</div>
-    </div>
-  );
-}
+// function Row({ label, value, muted }: { label: string; value: React.ReactNode; muted?: boolean }) {
+//   return (
+//     <div className='flex items-center justify-between text-sm'>
+//       <div className={cn('', muted && 'text-zinc-400')}>{label}</div>
+//       <div className={cn('', muted && 'text-zinc-400')}>{value}</div>
+//     </div>
+//   );
+// }
 
 // simple spin css (inject once)
 if (typeof document !== 'undefined' && !document.getElementById('pm-spin-style')) {

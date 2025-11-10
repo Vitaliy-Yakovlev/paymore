@@ -7,10 +7,10 @@ import {
   getSubcategories,
   getDevicesByCategory,
   getDevicesBySubcategory,
-  CategorialQuestions,
+  // CategorialQuestions,
   getCategorialQuestions,
-  CategorialQuestionsWithAnswers,
-  getCategorialQuestionsWithAnswers,
+  // CategorialQuestionsWithAnswers,
+  // getCategorialQuestionsWithAnswers,
 } from '../services/categoryService';
 
 export function useCategories() {
