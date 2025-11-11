@@ -87,7 +87,7 @@ const OfferClaimPage: React.FC = () => {
         </div>
 
         <Button disabled={!verificationChecked} onClick={() => navigate('/category')} colorButton={'green'}>
-          'Claim my cash now'
+          Claim my cash now
         </Button>
       </div>
     </div>
