@@ -244,7 +244,8 @@ function buildBarcodeLookupUrl(code: string) {
 // ---------------- Main App ----------------
 export default function App() {
   // Supabase hooks
-  const [selectedSubcategory /* setSelectedSubcategory */] = useState<number | null>(null);
+  // const [selectedSubcategory setSelectedSubcategory ] = useState<number | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [selectedCategory /* setSelectedCategory */] = useState<number | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { user: /* user */ _user } = useAuth();
@@ -254,7 +255,9 @@ export default function App() {
   /* eslint-disable @typescript-eslint/no-unused-vars */
   const { categories } = useCategories();
   const { subcategories } = useSubcategories(selectedCategory);
-  const { devices } = useDevices(selectedSubcategory);
+  const [deviceSearchTerm, setDeviceSearchTerm] = useState<string>('');
+  const [debouncedDeviceSearchTerm, setDebouncedSearchTerm] = useState(deviceSearchTerm);
+  const { devices /* loading: loadingDevices */ } = useDevices(debouncedDeviceSearchTerm, selectedCategory);
 
   const [step, setStep] = useState(1);
   const [mode, setMode] = useState<'sell' | 'buy'>('sell');

@@ -28,3 +28,10 @@ export interface CategoricalQuestion {
 export interface CategoricalQuestionWithAnswers extends CategoricalQuestion {
   question_answers: QuestionAnswer[];
 }
+
+export interface QuestionAnswerState {
+  answerId: number;
+  value: string;
+}
+
+export type QuestionAnswersMap = Record<number, QuestionAnswerState>;

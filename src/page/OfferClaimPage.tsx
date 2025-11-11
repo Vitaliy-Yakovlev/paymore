@@ -1,14 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router';
 import confetti from 'canvas-confetti';
-import { useDeviceVariantPrice } from '../hooks/useDevices';
 import Checkbox from '../components/Checkbox';
 import Button from '../components/Button';
 
 const OfferClaimPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { selectedCategoryId, selectedDeviceId, questionAnswersIds } = location.state || {};
+  const price = location.state?.salePrice || 0;
   const [verificationChecked, setVerificationChecked] = useState(false);
   const [timeLeft, setTimeLeft] = useState(20 * 60);
 
@@ -49,12 +48,6 @@ const OfferClaimPage: React.FC = () => {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // Get data from navigation state
-  const categoryId = selectedCategoryId || 0;
-  const deviceId = selectedDeviceId || 0;
-  const answerIds = Array.isArray(questionAnswersIds) ? questionAnswersIds : [];
-  const { salePrice, loading: loadingFinalPrice, error: finalPriceError } = useDeviceVariantPrice(categoryId, deviceId, answerIds);
-
   return (
     <div className='wrapper-offer-claim-page'>
       <div className='offer-claim-page'>
@@ -63,8 +56,8 @@ const OfferClaimPage: React.FC = () => {
 
         <p className='offer-claim-page-amount'>
           <span className='amount-text'>
-            {loadingFinalPrice ? 'Loading...' : finalPriceError ? 'Error calculating price' : `$${salePrice || 0} `}
-            {!loadingFinalPrice && <span className='cad-text'>CAD</span>}
+            {price}
+            <span className='cad-text'>CAD</span>
           </span>
         </p>
 
@@ -93,12 +86,8 @@ const OfferClaimPage: React.FC = () => {
           />
         </div>
 
-        <Button
-          disabled={!verificationChecked || loadingFinalPrice || !!finalPriceError}
-          onClick={() => navigate('/category')}
-          colorButton={'green'}
-        >
-          {loadingFinalPrice ? 'Calculating...' : 'Claim my cash now'}
+        <Button disabled={!verificationChecked} onClick={() => navigate('/category')} colorButton={'green'}>
+          'Claim my cash now'
         </Button>
       </div>
     </div>

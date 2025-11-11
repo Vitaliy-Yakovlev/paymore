@@ -5,16 +5,13 @@ import Button from '../Button';
 import css from './ModelSelect.module.css';
 
 const ModelSelect: React.FC<ModelSelectProps> = ({
-  catSpec,
-  subcatKeys,
-  subcategory,
-  setSubcategory,
-  q,
-  setQ,
   items,
   category,
   brand,
   model,
+  setDeviceSearchTerm,
+  deviceSearchTerm,
+  setSelectedDevice,
 }) => {
   const [currentPage, setCurrentPage] = useState(0);
   const navigate = useNavigate();
@@ -65,8 +62,8 @@ const ModelSelect: React.FC<ModelSelectProps> = ({
           className={css.inputSearch}
           type='text'
           name='search'
-          value={q}
-          onChange={e => setQ(e.target.value)}
+          value={deviceSearchTerm}
+          onChange={e => setDeviceSearchTerm(e.target.value)}
           placeholder='Search for a model'
         />
         <div className={css.wrapperBtnIcon}>
@@ -99,7 +96,7 @@ const ModelSelect: React.FC<ModelSelectProps> = ({
       <p className={css.title}>Choose device model</p>
 
       {/* Subcategory selector */}
-      {subcatKeys.length > 0 && (
+      {/* {subcatKeys.length > 0 && (
         <div className={css.subcategorySelector}>
           <p className={css.subcategoryTitle}>Choose subcategory:</p>
           <div className={css.subcategoryButtons}>
@@ -114,7 +111,7 @@ const ModelSelect: React.FC<ModelSelectProps> = ({
             ))}
           </div>
         </div>
-      )}
+      )} */}
 
       <ul className={css.list}>
         {currentItems.map((item: any) => (
@@ -127,7 +124,7 @@ const ModelSelect: React.FC<ModelSelectProps> = ({
               cleanKey = cleanKey.replace(/[-_]\d+$/, '');
 
               const deviceSlug = cleanKey.toLowerCase().replace(/_/g, '-');
-
+              setSelectedDevice(item.id);
               navigate(`/category/${brand}/${model}/${deviceSlug}`, {
                 state: {
                   device: item,

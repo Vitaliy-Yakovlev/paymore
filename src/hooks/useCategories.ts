@@ -1,65 +1,31 @@
-import { useEffect, useState, useCallback } from 'react';
-import {
-  Category,
-  Subcategory,
-  Device,
-  getCategories,
-  getSubcategories,
-  getDevicesByCategory,
-  getDevicesBySubcategory,
-  // CategorialQuestions,
-  getCategorialQuestions,
-  // CategorialQuestionsWithAnswers,
-  // getCategorialQuestionsWithAnswers,
-} from '../services/categoryService';
+import { useEffect, useState } from 'react';
+import { getCategories, CategorialQuestions, getCategorialQuestions } from '../services/categoryService';
+import { Category } from '../types/category';
 
 export function useCategories() {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
-  const [devices, setDevices] = useState<Device[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Load all data
-  const loadAllData = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-
+  useEffect(() => {
     try {
-      const [categoriesData, subcategoriesData, devicesData] = await Promise.all([
-        getCategories(),
-        getSubcategories(0), // Get all subcategories
-        getDevicesByCategory(0), // Get all devices
-      ]);
-
-      setCategories(categoriesData);
-      setSubcategories(subcategoriesData);
-      setDevices(devicesData);
+      getCategories().then(data => {
+        setCategories(data);
+        setLoading(false);
+        setError(null);
+      });
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
       setError(errorMessage);
-    } finally {
       setLoading(false);
     }
   }, []);
 
-  // Load on initialization
-  useEffect(() => {
-    loadAllData();
-  }, [loadAllData]);
-
-  return {
-    loading,
-    error,
-    categories,
-    subcategories,
-    devices,
-    loadAllData,
-  };
+  return { categories, loading, error };
 }
 
 export function useCategorialQuestions(categoryId: number | null, deviceId: number | null) {
-  const [categorialQuestions, setCategorialQuestions] = useState<any[]>([]);
+  const [categorialQuestions, setCategorialQuestions] = useState<CategorialQuestions[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -99,48 +65,3 @@ export function useCategorialQuestions(categoryId: number | null, deviceId: numb
 
   return { categorialQuestions, loading, error };
 }
-
-// Additional hooks for specific data operations
-export const useDevices = () => {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const getDevicesForCategory = useCallback(async (categoryId: number): Promise<Device[]> => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const devices = await getDevicesByCategory(categoryId);
-      return devices;
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
-      setError(errorMessage);
-      return [];
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  const getDevicesForSubcategory = useCallback(async (subcategoryId: number): Promise<Device[]> => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const devices = await getDevicesBySubcategory(subcategoryId);
-      return devices;
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
-      setError(errorMessage);
-      return [];
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  return {
-    loading,
-    error,
-    getDevicesForCategory,
-    getDevicesForSubcategory,
-  };
-};

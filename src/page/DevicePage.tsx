@@ -1,135 +1,79 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 import { RotatingLines } from 'react-loader-spinner';
-import { useCategories, useCategorialQuestions } from '../hooks/useCategories';
-import { useSubcategories } from '../hooks/useSubcategories';
-import { useDevices, useDevicesBySubcategory, useVariants } from '../hooks/useDevices';
 import ModelSelect from '../components/ModelSelect';
 import DeviceDetail from '../components/DeviceDetail';
 import StepContainer from '../components/StepContainer/StepContainer';
+import { useCategories, useCategorialQuestions } from '../hooks/useCategories';
+import { useDevices, useDeviceVariants, useDeviceVariantPrice } from '../hooks/useDevices';
+import { QuestionAnswersMap } from '../types/questions';
 
 const DevicePage: React.FC = () => {
-  const [step, setStep] = useState<number>(1);
-  const [subcategory, setSubcategory] = useState<string>('');
-  const [q, setQ] = useState<string>('');
-
   const { brand, model, deviceName } = useParams<{ brand: string; model: string; deviceName?: string }>();
   const location = useLocation();
+  const [step, setStep] = useState<number>(1);
+  const [currentSelectedDevice, setCurrentSelectedDevice] = useState<any>(location.state?.device || null);
+  const [selectedCategory] = useState<number | null>(location.state?.device?.category_id || location.state?.categoryId || null);
+  const [selectedDevice, setSelectedDevice] = useState<number | null>(location.state?.device?.id || null);
 
-  // Get categories first
-  const { categories, loading: loadingCategories, error: categoriesError } = useCategories();
-  const categoryKey = (location.state as any)?.categoryKey || (brand && model ? `${brand}_${model}`.toLowerCase() : '');
+  const [selectedDeviceVariant, setSelectedDeviceVariant] = useState<number | null>(null);
+  const [questionAnswers, setQuestionAnswers] = useState<QuestionAnswersMap>({});
+  const [questionAnswersIds, setQuestionAnswersIds] = useState<number[]>([]);
+  const [deviceSearchTerm, setDeviceSearchTerm] = useState<string>('');
+  const [debouncedDeviceSearchTerm, setDebouncedSearchTerm] = useState(deviceSearchTerm);
 
-  // Find category ID
-  const selectedCategoryId = useMemo(() => {
-    if (!categories.length || !categoryKey) return null;
-    const cat = categories.find(c => c.key === categoryKey);
-    return cat ? cat.id : null;
-  }, [categories, categoryKey]);
+  const { categories, loading: loadingCategories } = useCategories();
+  const {
+    categorialQuestions,
+    // loading: loadingQuestions,
+    error: questionsError,
+  } = useCategorialQuestions(selectedCategory, selectedDevice);
 
-  // Get subcategories for the selected category
-  const { subcategories, loading: loadingSubcategories } = useSubcategories(selectedCategoryId);
+  const { devices /* loading: loadingDevices */ } = useDevices(debouncedDeviceSearchTerm, selectedCategory);
+  const { deviceVariants /* loading: loadingDevicesVariants */ } = useDeviceVariants(selectedDevice);
 
-  // Find selected subcategory ID
-  const selectedSubcategoryId = useMemo(() => {
-    if (!subcategories.length || !subcategory) return null;
-    const subcat = subcategories.find((sub: any) => sub.key === subcategory);
-    return subcat ? subcat.id : null;
-  }, [subcategories, subcategory]);
+  const {
+    salePrice,
+    // loading: loadingFinalPrice,
+    // error: finalPriceError,
+  } = useDeviceVariantPrice(selectedCategory || 0, selectedDeviceVariant || 0, questionAnswersIds);
 
-  // Get devices for the selected subcategory or category
-  const { devices: subcategoryDevices, loading: loadingSubcategoryDevices } = useDevicesBySubcategory(selectedSubcategoryId);
-  const { devices: categoryDevices, loading: loadingCategoryDevices } = useDevices(selectedSubcategoryId ? null : selectedCategoryId);
+  function handleQuestionChange(questionId: number, answerId: number, value: string): void {
+    setQuestionAnswers(prev => ({ ...prev, [questionId]: { answerId, value } }));
 
-  // Use devices from subcategory if selected, otherwise from category
-  const devices = useMemo(() => {
-    if (selectedSubcategoryId && subcategoryDevices) {
-      return subcategoryDevices;
+    setQuestionAnswersIds(prev => {
+      const otherAnswers = prev.filter(id => Object(questionAnswers)[questionId]?.answerId !== id);
+      return [...otherAnswers, answerId];
+    });
+  }
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(deviceSearchTerm);
+    }, 400); // wait 400 ms after the last keystroke
+
+    return () => clearTimeout(timer);
+  }, [deviceSearchTerm]);
+
+  useEffect(() => {
+    if (selectedDevice) {
+      const device = devices.find(d => d.id === selectedDevice) || null;
+      setCurrentSelectedDevice(device);
     }
-    return categoryDevices || [];
-  }, [selectedSubcategoryId, subcategoryDevices, categoryDevices]);
+  }, [selectedDevice, devices, location, step]);
 
   useEffect(() => {
     if (deviceName) {
       setStep(2);
     } else if (brand && model) {
       setStep(1);
-      setQ('');
+      setDebouncedSearchTerm('');
     }
   }, [deviceName, brand, model]);
 
-  const selectedDevice: any = useMemo(() => {
-    if (!deviceName || !devices || !devices.length) return null;
-    return devices.find((d: any) => {
-      let cleanKey = d.key;
-      cleanKey = cleanKey.replace(/[-_]\d+\s*(GB|TB|MB)$/gi, '');
-      cleanKey = cleanKey.replace(/[-_]\d+$/, '');
-
-      const deviceSlug = cleanKey.toLowerCase().replace(/_/g, '-');
-
-      return deviceSlug === deviceName.toLowerCase();
-    });
-  }, [deviceName, devices]);
-  // Get variants for the selected device
-  const { loading: loadingVariants } = useVariants(selectedDevice?.id || null);
-  const { categorialQuestions } = useCategorialQuestions(selectedCategoryId, selectedDevice?.id || null);
-
-  // Combined loading state
-  const loading = loadingCategories || loadingSubcategories || loadingCategoryDevices || loadingSubcategoryDevices || loadingVariants;
-  const error = categoriesError;
-
-  const catSpec: any = useMemo(() => {
-    if (!categories.length) return { subcategories: {}, items: [] };
-
-    const cat = categories.find(c => c.key === categoryKey);
-    if (!cat) return { subcategories: {}, items: [] };
-
-    const safeSubcategories = subcategories || [];
-    const safeDevices = devices || [];
-    const subcats = safeSubcategories.filter((sub: any) => sub.category_id === cat.id);
-
-    return {
-      label: cat.label,
-      subcategories: subcats.reduce((acc: any, sub: any) => {
-        acc[sub.key] = {
-          label: sub.label,
-          items: safeDevices.filter((d: any) => d.subcategory_id === sub.id),
-        };
-        return acc;
-      }, {}),
-      items: safeDevices.filter((d: any) => d.category_id === cat.id && !d.subcategory_id),
-    };
-  }, [categories, subcategories, devices, categoryKey]);
-
-  const subcatKeys = useMemo(() => Object.keys(catSpec.subcategories || {}), [catSpec]);
-
-  useEffect(() => {
-    const newSubcategory = subcatKeys.length ? subcatKeys[0] : '';
-    setSubcategory(newSubcategory);
-  }, [subcatKeys, deviceName]);
-
-  // Get devices for current subcategory or all category devices
-  const deviceList = useMemo(() => {
-    if (catSpec.subcategories && subcategory && catSpec.subcategories[subcategory]) {
-      return catSpec.subcategories[subcategory].items || [];
-    }
-    return catSpec.items || [];
-  }, [catSpec, subcategory]);
-
-  // Filter devices by search query
-  const filteredDevices = useMemo(() => {
-    const query = q.trim().toLowerCase();
-    if (!query) return deviceList;
-
-    return deviceList.filter((device: any) => {
-      const searchText = [device.label, device.brand, device.model, device.key].filter(Boolean).join(' ').toLowerCase();
-      return searchText.includes(query);
-    });
-  }, [deviceList, q]);
-
   return (
     <>
-      {loading && (
+      {loadingCategories && (
         <RotatingLines
           visible={true}
           height='36'
@@ -142,33 +86,30 @@ const DevicePage: React.FC = () => {
           wrapperClass='spinner-wrapper'
         />
       )}
-      {error && <div style={{ padding: '20px', color: 'red' }}>Error: {error}</div>}
-      {!loading && !error && (
+      {questionsError && <div style={{ padding: '20px', color: 'red' }}>Error: {questionsError}</div>}
+      {!loadingCategories && !questionsError && (
         <StepContainer step={step}>
-          {!loading && !error && catSpec.label && selectedDevice && (
+          {!loadingCategories && !questionsError && [2, 3].includes(step) && (
             <DeviceDetail
-              device={selectedDevice}
-              categorialQuestions={categorialQuestions}
+              currentSelectedDevice={currentSelectedDevice}
               step={step}
               setStep={setStep}
-              selectedCategoryId={selectedCategoryId}
-              selectedDeviceId={selectedDevice.id}
+              handleQuestionChange={handleQuestionChange}
+              deviceVariants={deviceVariants}
+              categorialQuestions={categorialQuestions as any}
+              setSelectedDeviceVariant={setSelectedDeviceVariant}
+              salePrice={salePrice}
             />
           )}
-          {!loading && !error && catSpec.label && !selectedDevice && step === 1 && (
+          {!loadingCategories && !questionsError && step === 1 && (
             <ModelSelect
-              catSpec={catSpec}
-              subcatKeys={subcatKeys}
-              subcategory={subcategory}
-              setSubcategory={setSubcategory}
-              q={q}
-              setQ={setQ}
-              items={filteredDevices}
-              lowMatches={[]}
-              category={categoryKey}
+              items={devices}
+              setDeviceSearchTerm={setDeviceSearchTerm}
+              deviceSearchTerm={deviceSearchTerm}
+              setSelectedDevice={setSelectedDevice}
+              category={categories.find(c => c.id === selectedCategory)?.key || ''}
               brand={brand || ''}
               model={model || ''}
-              categoryLabel={catSpec.label}
             />
           )}
         </StepContainer>

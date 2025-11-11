@@ -1,37 +1,7 @@
-// Service for working with price calculations from Supabase
+// Service for working with categories from Supabase
 import { supabase } from '../lib/supabase';
-
-// Helper function to get category by ID
-async function getCategoryById(categoryId: number) {
-  const { data, error } = await supabase.from('categories').select('*').eq('id', categoryId);
-
-  if (error) {
-    console.error('❌ Error fetching category:', error);
-    return null;
-  }
-
-  if (!data || data.length === 0) {
-    return null;
-  }
-
-  return data[0];
-}
-
-// Helper function to get device variant by ID
-async function getDeviceVariantById(variantId: number) {
-  const { data, error } = await supabase.from('device_variants').select('*').eq('id', variantId);
-
-  if (error) {
-    console.error('❌ Error fetching device variant:', error);
-    return null;
-  }
-
-  if (!data || data.length === 0) {
-    return null;
-  }
-
-  return data[0];
-}
+import { getCategoryById } from './categoryService';
+import { getDeviceVariantById } from './deviceService';
 
 export async function getDeviceVariantPrice(
   categoryId: number = 0,
