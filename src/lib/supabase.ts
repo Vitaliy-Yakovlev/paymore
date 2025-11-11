@@ -384,6 +384,8 @@ export interface Database {
           question_id: number;
           value: string;
           is_active: boolean;
+          weight: number;
+          weight_type: string;
         };
         Insert: {
           id?: number;

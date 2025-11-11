@@ -5,6 +5,17 @@ export interface QuestionAnswer {
   is_active: boolean;
 }
 
+export interface QuestionDeviceVariant {
+  created_at: string;
+  device_id: number;
+  id: number;
+  is_active: boolean;
+  label: string;
+  price: number;
+  storage: string;
+  updated_at: string;
+}
+
 export interface CategoricalQuestion {
   id: number;
   question: string;
@@ -17,3 +28,10 @@ export interface CategoricalQuestion {
 export interface CategoricalQuestionWithAnswers extends CategoricalQuestion {
   question_answers: QuestionAnswer[];
 }
+
+export interface QuestionAnswerState {
+  answerId: number;
+  value: string;
+}
+
+export type QuestionAnswersMap = Record<number, QuestionAnswerState>;
