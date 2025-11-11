@@ -182,19 +182,7 @@ const DeviceDetail: React.FC<DeviceDetailProps> = ({
 
                               const question = categorialQuestions.find(q => q.question.toLowerCase().includes('battery health'));
                               if (question && question.question_answers.length > 0) {
-                                // Find the appropriate answer based on battery percentage
-                                const answer = question.question_answers.find(a => {
-                                  const range = a.value; // e.g., "10-40", "41-60", "61-80", "81-100"
-                                  if (range.includes('-')) {
-                                    const [min, max] = range.split('-').map(num => parseInt(num.trim()));
-                                    return newBatteryHealth >= min && newBatteryHealth <= max;
-                                  }
-                                  return false;
-                                });
-
-                                if (answer) {
-                                  handleQuestionChange(question.id, answer.id, newBatteryHealth.toString());
-                                }
+                                handleQuestionChange(question.id, question.id, e.target.value);
                               }
                             }}
                             type='range'
