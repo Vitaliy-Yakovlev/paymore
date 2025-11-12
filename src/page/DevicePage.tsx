@@ -7,6 +7,7 @@ import StepContainer from '../components/StepContainer/StepContainer';
 import { useCategories, useCategorialQuestions } from '../hooks/useCategories';
 import { useDevices, useDeviceVariants, useDeviceVariantPrice } from '../hooks/useDevices';
 import { QuestionAnswersMap } from '../types/questions';
+import NotPurchaseDevice from '../components/NotPurchaseDevice';
 
 const DevicePage: React.FC = () => {
   const { brand, model, deviceName } = useParams<{ brand: string; model: string; deviceName?: string }>();
@@ -21,8 +22,8 @@ const DevicePage: React.FC = () => {
   const [questionAnswersIds, setQuestionAnswersIds] = useState<number[]>([]);
   const [deviceSearchTerm, setDeviceSearchTerm] = useState<string>('');
   const [debouncedDeviceSearchTerm, setDebouncedSearchTerm] = useState(deviceSearchTerm);
-  console.log('🚀 ~ JSON.stringify(questionAnswers, null, 2):', JSON.stringify(questionAnswers, null, 2));
-  console.log('🚀 ~ JSON.stringify(questionAnswersIds, null, 2):', JSON.stringify(questionAnswersIds, null, 2));
+  // console.log('🚀 ~ JSON.stringify(questionAnswers, null, 2):', JSON.stringify(questionAnswers, null, 2));
+  // console.log('🚀 ~ JSON.stringify(questionAnswersIds, null, 2):', JSON.stringify(questionAnswersIds, null, 2));
 
   const { categories, loading: loadingCategories } = useCategories();
   const {
@@ -89,7 +90,7 @@ const DevicePage: React.FC = () => {
         />
       )}
       {questionsError && <div style={{ padding: '20px', color: 'red' }}>Error: {questionsError}</div>}
-      {!loadingCategories && !questionsError && (
+      {!loadingCategories && !questionsError && step > 0 && (
         <StepContainer step={step}>
           {!loadingCategories && !questionsError && [2, 3].includes(step) && (
             <DeviceDetail
@@ -112,10 +113,12 @@ const DevicePage: React.FC = () => {
               category={categories.find(c => c.id === selectedCategory)?.key || ''}
               brand={brand || ''}
               model={model || ''}
+              setStep={setStep}
             />
           )}
         </StepContainer>
       )}
+      {!loadingCategories && !questionsError && !step && <NotPurchaseDevice categories={categories} />}
     </>
   );
 };
