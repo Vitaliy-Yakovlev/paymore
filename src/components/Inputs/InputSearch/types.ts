@@ -3,4 +3,5 @@ export type SearchInputProps = {
   onChange: (value: string) => void;
   placeholder?: string;
   className?: string;
+  voice?: boolean;
 };

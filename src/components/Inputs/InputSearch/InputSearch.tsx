@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import css from './InputSearch.module.css';
 import { SearchInputProps } from './types';
 
-const InputSearch = ({ value, onChange, placeholder = 'Search for a model', className }: SearchInputProps) => {
+const InputSearch = ({ value, onChange, placeholder = 'Search for a model', className, voice }: SearchInputProps) => {
   const [isListening, setIsListening] = useState(false);
   const [recognition, setRecognition] = useState<any>(null);
 
@@ -83,11 +83,13 @@ const InputSearch = ({ value, onChange, placeholder = 'Search for a model', clas
             <use href='/img/sprite-icon.svg#mic' />
           </svg>
         </button>
-        {/* <button className={css.btnIcon} type='button'>
-          <svg width={24} height={24}>
-            <use href='/img/sprite-icon.svg#voice' />
-          </svg>
-        </button> */}
+        {voice && (
+          <button className={css.btnIcon} type='button'>
+            <svg width={24} height={24}>
+              <use href='/img/sprite-icon.svg#voice' />
+            </svg>
+          </button>
+        )}
       </div>
     </div>
   );
