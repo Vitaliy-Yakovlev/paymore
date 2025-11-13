@@ -40,7 +40,7 @@ const ModelSelect: React.FC<ModelSelectProps> = ({
 
   return (
     <div className={css.wrapperModelSelect}>
-      <InputSearch value={deviceSearchTerm} onChange={setDeviceSearchTerm} placeholder='Search for a model' />
+      <InputSearch voice value={deviceSearchTerm} onChange={setDeviceSearchTerm} placeholder='Search for a model' />
 
       <p className={css.subtitle}>
         <svg width={18} height={18}>

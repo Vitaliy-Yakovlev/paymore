@@ -13,16 +13,16 @@ const GoogleMap = () => {
   return (
     <div className={css.mapContainer}>
       <iframe
-        src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3048.398!2d-74.0059728!3d40.7127753!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89c25a316e10c5af%3A0x1b2d3e4f5g6h7i8j!2sNew%20York%2C%20NY!5e0!3m2!1sen!2sus!4v1699999999999!5m2!1sen!2sus'
+        src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2886.6564267878288!2d-79.38759322409167!3d43.65699847111816!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x882b35a0340f167b%3A0xcb7777322981a803!2sPayMore%20Toronto%20Downtown%20-%20Sell%20Electronics%20for%20Cash!5e0!3m2!1sen!2sca!4v1735299900000!5m2!1sen!2sca'
         width='100%'
         height='200'
         style={{ border: 0, borderRadius: '8px' }}
         allowFullScreen={true}
         loading='lazy'
         referrerPolicy='no-referrer-when-downgrade'
-        title='Store Location'
+        title='PayMore Toronto Downtown Store Location'
       />
-      <p className={css.mapLabel}>Visit our store to complete your transaction</p>
+      <p className={css.mapLabel}>Visit our PayMore store in Toronto Downtown to complete your transaction</p>
     </div>
   );
 };
@@ -144,6 +144,12 @@ const NotPurchaseDevice = ({ categories }: NotPurchaseDeviceProps) => {
     Consign: 'consigning',
   };
 
+  const textCongratulations: { [key: string]: string } = {
+    Recycle: 'We received your request',
+    Donate: 'You have donated your device',
+    Consign: 'We received your request',
+  };
+
   return (
     <div className={css.wrapperNotPurchaseDevice}>
       {currentStep < 2 && (
@@ -224,7 +230,7 @@ const NotPurchaseDevice = ({ categories }: NotPurchaseDeviceProps) => {
           <div className='offer-claim-page'>
             <h1 className='offer-claim-page-title'>Congratulations 🎉</h1>
             <p className='offer-claim-page-subtitle' style={{ marginBottom: '20px' }}>
-              Your offer is ready, claim your cash!
+              {textCongratulations[selectedCondition]}!
             </p>
 
             <GoogleMap />
