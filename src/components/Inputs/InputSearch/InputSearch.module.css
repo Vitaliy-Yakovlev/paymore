@@ -1,0 +1,104 @@
+.wrapperSearch {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  margin-bottom: 23px;
+}
+
+.btnAddIcon {
+  position: absolute;
+  left: 5px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 29px;
+  height: 24px;
+  font-size: 24px;
+
+  border-radius: 50%;
+  border: none;
+  color: #6b7280;
+  background: transparent;
+  cursor: pointer;
+  padding-bottom: 5px;
+  transition:
+    background 250ms cubic-bezier(0.4, 0, 0.2, 1),
+    color 250ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btnAddIcon:hover {
+  background: rgba(41, 42, 44, 0.1);
+  color: #45b549;
+}
+
+.inputSearch {
+  border-radius: 8px;
+  border: 1px solid #d1d8d8;
+  padding: 14px 70px 14px 35px;
+  width: 100%;
+  max-width: 405px;
+}
+
+.inputSearch:focus {
+  outline: none;
+  border-color: #45b549;
+}
+
+.inputSearch::placeholder {
+  color: #6b7280;
+  font-family: Inter;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: normal;
+}
+
+.wrapperBtnIcon {
+  position: absolute;
+  top: 50%;
+  right: 14px;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.btnIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.btnIcon svg {
+  transition: fill 250ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btnIcon:hover svg {
+  fill: #45b549;
+}
+
+.btnIcon.listening svg {
+  fill: #45b549;
+  animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 1;
+  }
+}
