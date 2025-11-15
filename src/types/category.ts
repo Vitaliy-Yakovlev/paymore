@@ -48,8 +48,7 @@ export interface DeviceVariant {
   id: number;
   device_id: number;
   price: number;
-  storage: string;
-  is_active: boolean;
+  label: string;
   created_at: string;
   updated_at: string;
 }
