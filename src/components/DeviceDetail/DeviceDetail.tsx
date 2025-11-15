@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { CategorialQuestions } from '../../services/categoryService';
 import { DeviceVariant } from '../../types/category';
@@ -25,6 +25,13 @@ interface DeviceDetailProps {
   salePrice: number | 0;
 }
 
+// Unified state type for all question answers
+type QuestionAnswersState = {
+  storage?: string | number;
+  batteryHealth?: number;
+  [key: string]: string | number | boolean | undefined;
+};
+
 const DeviceDetail: React.FC<DeviceDetailProps> = ({
   currentSelectedDevice,
   step,
@@ -37,25 +44,11 @@ const DeviceDetail: React.FC<DeviceDetailProps> = ({
 }) => {
   const navigate = useNavigate();
   const { brand, model } = useParams();
-  const [selectedStorage, setSelectedStorage] = useState<string | number>(currentSelectedDevice?.storage || '');
-  const [selectedCondition, setSelectedCondition] = useState<string | number>(currentSelectedDevice?.condition || '');
-  const [batteryHealth, setBatteryHealth] = useState<number>(74);
-  const [additionalDetails, setAdditionalDetails] = useState<{ [key: string]: boolean }>({});
-  const initializedRef = useRef(false);
+  // Unified state for all question answers
+  const [answers, setAnswers] = useState<QuestionAnswersState>({
+    storage: currentSelectedDevice?.storage || '',
+  });
 
-  const initializeBatteryHealth = useCallback(() => {
-    if (!initializedRef.current && categorialQuestions.length > 0) {
-      const batteryQuestion = categorialQuestions.find(q => q.question.toLowerCase().includes('battery health'));
-      if (batteryQuestion) {
-        handleQuestionChange(batteryQuestion.id, batteryQuestion.id, batteryHealth.toString());
-        initializedRef.current = true;
-      }
-    }
-  }, [categorialQuestions, batteryHealth, handleQuestionChange]);
-
-  useEffect(() => {
-    initializeBatteryHealth();
-  }, [initializeBatteryHealth]);
 
   const getQuestionsForStep = (stepNumber: number) => {
     if (stepNumber === 2) {
@@ -67,62 +60,116 @@ const DeviceDetail: React.FC<DeviceDetailProps> = ({
     return [];
   };
 
-  const getQuestionType = (question: string) => {
-    const lowerQuestion = question.toLowerCase();
+  // Unified onChange handler for all question types
+  const handleAnswerChange = (
+    questionId: number,
+    answerId: number,
+    value: string | number,
+    questionType?: string,
+    answerValue?: string
+  ) => {
+    setAnswers(prev => {
+      const newAnswers = { ...prev };
 
-    if (lowerQuestion.includes('storage')) {
-      return 'storage';
-    }
-    if (lowerQuestion.includes('additional details') || lowerQuestion.includes('charger included')) {
-      return 'additional_details';
-    }
-    if (lowerQuestion.includes('battery health')) {
-      return 'battery_health';
-    }
-    if (lowerQuestion.includes('condition')) {
-      return 'condition';
-    }
+      if (questionType === 'storage') {
+        // Handle storage selection
+        const newValue = value === prev.storage ? '' : value;
+        newAnswers.storage = newValue;
 
-    return 'generic';
+        // Find selected variant and pass to parent component
+        const selectedVariant = deviceVariants.find(variant => variant.label === newValue);
+        if (selectedVariant && newValue) {
+          setSelectedDeviceVariant(selectedVariant.id);
+          handleQuestionChange(0, selectedVariant.id, newValue.toString());
+        } else {
+          setSelectedDeviceVariant(null);
+        }
+      } else if (questionType === 'range' || questionType === 'slider') {
+        newAnswers[`question_${questionId}`] = value;
+        handleQuestionChange(questionId, questionId, value.toString());
+      } else if (questionType === 'radio' || questionType === 'single_choice') {
+        const newValue = value === prev[`question_${questionId}`] ? '' : value;
+        newAnswers[`question_${questionId}`] = newValue;
+        if (newValue) {
+          handleQuestionChange(questionId, answerId, value.toString());
+        }
+      } else if (questionType === 'checkbox' || questionType === 'multiple_choice') {
+        if (answerValue) {
+          const currentValue = prev[answerValue] || false;
+          newAnswers[answerValue] = !currentValue;
+          handleQuestionChange(questionId, answerId, answerValue);
+        }
+      } else {
+        const question = categorialQuestions.find(q => q.id === questionId);
+        if (question && question.question_answers.length > 0) {
+          if (answerValue) {
+            const currentValue = prev[answerValue] || false;
+            newAnswers[answerValue] = !currentValue;
+            handleQuestionChange(questionId, answerId, answerValue);
+          } else {
+            const newValue = value === prev[`question_${questionId}`] ? '' : value;
+            newAnswers[`question_${questionId}`] = newValue;
+            if (newValue) {
+              handleQuestionChange(questionId, answerId, value.toString());
+            }
+          }
+        }
+      }
+
+      return newAnswers;
+    });
   };
 
   const isFormValid = () => {
     if (step === 2) {
       const step2Questions = getQuestionsForStep(2);
 
-      if (step2Questions.length === 0) {
+      if (step2Questions.length === 0 && optionsStorage.length === 0) {
         return true;
       }
 
-      if (optionsStorage.length > 0 && !Boolean(selectedStorage)) {
+      // Check storage if variants exist
+      if (optionsStorage.length > 0 && !Boolean(answers.storage)) {
         return false;
       }
 
+      // Validate each question dynamically
       for (const question of step2Questions) {
-        const questionType = getQuestionType(question.question);
+        const questionType = question.question_type?.toLowerCase() || '';
 
-        switch (questionType) {
-          case 'storage':
-            if (optionsStorage.length > 0 && !Boolean(selectedStorage)) {
-              return false;
-            }
-            break;
-          case 'additional_details':
-            if (question.question.toLowerCase().includes('charger included')) {
-              continue;
-            }
+        // Skip optional questions (like charger included)
+        if (question.question.toLowerCase().includes('charger included')) {
+          continue;
+        }
 
-            if (!Object.values(additionalDetails).some(element => element === true)) {
-              return false;
-            }
-            break;
-          case 'battery_health':
-            break;
-          case 'generic':
-            if (!Object.values(additionalDetails).some(element => element === true)) {
-              return false;
-            }
-            break;
+        // For range/slider types, they usually have default values, so skip validation
+        if (questionType === 'range' || questionType === 'slider') {
+          continue;
+        }
+
+        // For radio/single_choice, check if question has an answer
+        if (questionType === 'radio' || questionType === 'single_choice') {
+          if (!Boolean(answers[`question_${question.id}`])) {
+            return false;
+          }
+        }
+        // For checkbox/multiple_choice, check if at least one answer is selected
+        else if (questionType === 'checkbox' || questionType === 'multiple_choice') {
+          const hasAnswer = question.question_answers.some(
+            answer => answers[answer.value] === true
+          );
+          if (!hasAnswer) {
+            return false;
+          }
+        }
+        // For unknown types, check if question has an answer (default to single choice behavior)
+        else {
+          const hasAnswer = question.question_answers.some(
+            answer => answers[answer.value] === true || answers[`question_${question.id}`]
+          );
+          if (question.question_answers.length > 0 && !hasAnswer) {
+            return false;
+          }
         }
       }
 
@@ -136,39 +183,17 @@ const DeviceDetail: React.FC<DeviceDetailProps> = ({
         return true;
       }
 
-      return Boolean(selectedCondition);
+      // Check if condition question is answered
+      for (const question of step3Questions) {
+        if (!Boolean(answers[`question_${question.id}`])) {
+          return false;
+        }
+      }
+
+      return true;
     }
 
     return true;
-  };
-
-  const handleStorageChange = (value: string | number) => {
-    const newValue = value === selectedStorage ? '' : value;
-    setSelectedStorage(newValue);
-
-    // Find selected variant and pass to parent component
-    const selectedVariant = deviceVariants.find(variant => variant.storage === newValue);
-    if (selectedVariant && newValue) {
-      setSelectedDeviceVariant(selectedVariant.id);
-      // Call parent handler to update question answers
-      handleQuestionChange(0, selectedVariant.id, newValue.toString()); // questionId 0 for storage
-    } else {
-      setSelectedDeviceVariant(null);
-    }
-  };
-
-  const handleConditionChange = (value: string | number) => {
-    const newValue = value === selectedCondition ? '' : value;
-    setSelectedCondition(newValue);
-
-    // Find condition question and answer
-    const conditionQuestion = categorialQuestions.find(q => q.question.toLowerCase().includes('condition'));
-    const conditionAnswer = conditionQuestion?.question_answers.find(answer => answer.value === newValue);
-
-    if (conditionQuestion && conditionAnswer && newValue) {
-      // Call parent handler to update question answers
-      handleQuestionChange(conditionQuestion.id, conditionAnswer.id, newValue.toString());
-    }
   };
   const parseStorageSize = (storage: string): number => {
     if (!storage) return 0;
@@ -189,7 +214,7 @@ const DeviceDetail: React.FC<DeviceDetailProps> = ({
 
   const optionsStorage: string[] =
     (deviceVariants || [])
-      .map((variant: DeviceVariant) => variant?.storage)
+      .map((variant: DeviceVariant) => variant?.label)
       .filter(Boolean) // Remove null/undefined values
       ?.sort((a: string, b: string) => {
         // Parse storage with units (GB, TB) for proper sorting
@@ -213,128 +238,117 @@ const DeviceDetail: React.FC<DeviceDetailProps> = ({
       </div>
 
       <>
-        {step === 2 && deviceVariants && optionsStorage.length > 0 && (
+        {step === 2 && (
           <>
-            <p className={css.title}>Storage size</p>
-            <div className={css.wrapperRadioBtn}>
-              <ButtonRadio options={optionsStorage} value={selectedStorage} onChange={handleStorageChange} />
-            </div>
+            {/* First show storage selection (deviceVariants) */}
+            {deviceVariants && optionsStorage.length > 0 && (
+              <>
+                <p className={css.title}>Storage size</p>
+                <div className={css.wrapperRadioBtn}>
+                  <ButtonRadio
+                    options={optionsStorage}
+                    value={answers.storage || ''}
+                    onChange={(value) => handleAnswerChange(0, 0, value, 'storage')}
+                  />
+                </div>
+              </>
+            )}
+
+            {getQuestionsForStep(2).map(question => {
+              const questionType = question.question_type?.toLowerCase() || '';
+              
+              return (
+                <div key={question.id}>
+                  <p className={css.title}>{question.question}{question.id}{questionType}{answers[`question_${question.id}`]}</p>
+                  {question.description && <p className={css.description}>{question.description}</p>}
+                  
+                  {/* Render based on question_type */}
+                  {questionType === 'range' || questionType === 'slider' ? (
+                    <>
+                      <div className={css.sliderContainer}>
+                        <input
+                          className={css.batterySlider}
+                          onChange={(e) => handleAnswerChange(question.id, question.id, e.target.value, questionType)}
+                          type='range'
+                          min='0'
+                          max='100'
+                          value={Number(answers[`question_${question.id}`]) || 74}
+                          style={{
+                            background: `linear-gradient(to right, #45B549 0%, #45B549 ${Number(answers[`question_${question.id}`]) || 74}%, #E0E0E0 ${Number(answers[`question_${question.id}`]) || 74}%, #E0E0E0 100%)`,
+                          }}
+                        />
+                      </div>
+                      <p className={css.currentText}>Current: {Number(answers[`question_${question.id}`]) || 74}%</p>
+                    </>
+                  ) : questionType === 'radio' || questionType === 'single_choice' ? (
+                    <div className={css.wrapperBntRadio}>
+                      {question.question_answers.length > 0 && (
+                        <ButtonRadio
+                          options={question.question_answers.map(answer => answer.value)}
+                          value={(typeof answers[`question_${question.id}`] === 'string' || typeof answers[`question_${question.id}`] === 'number') 
+                            ? answers[`question_${question.id}`] as string | number 
+                            : ''}
+                          onChange={(value) => {
+                            const selectedAnswer = question.question_answers.find(answer => answer.value === value);
+                            if (selectedAnswer) {
+                              handleAnswerChange(question.id, selectedAnswer.id, value, questionType);
+                            }
+                          }}
+                        />
+                      )}
+                    </div>
+                  ) : questionType === 'checkbox' || questionType === 'multiple_choice' || question.question_answers.length > 1 ? (
+                    <div>
+                      {question.question_answers.map(answer => (
+                        <div key={answer.id} className={css.wrapperCheckbox}>
+                          <Checkbox
+                            label={answer.value}
+                            checked={Boolean(answers[answer.value]) || false}
+                            onChange={() => handleAnswerChange(question.id, answer.id, answer.value, questionType || 'checkbox', answer.value)}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  ) : question.question_answers.length === 1 ? (
+                    // Single answer - render as checkbox for yes/no or radio for other
+                    <div className={css.wrapperCheckbox}>
+                      <Checkbox
+                        label={question.question_answers[0].value}
+                        checked={Boolean(answers[question.question_answers[0].value]) || false}
+                        onChange={() => handleAnswerChange(question.id, question.question_answers[0].id, question.question_answers[0].value, questionType || 'checkbox', question.question_answers[0].value)}
+                      />
+                    </div>
+                  ) : null}
+                </div>
+              );
+            })}
           </>
         )}
 
-        {getQuestionsForStep(2).length !== 0 &&
-          getQuestionsForStep(2).map(variant => {
-            return (
-              <>
-                {step === 2 && (
-                  <div key={variant.id}>
-                    {getQuestionType(variant.question) === 'additional_details' && (
-                      <>
-                        <p className={css.title}>{variant.question}</p>
-                        {variant.question.toLowerCase().includes('charger included') && (
-                          <div className={css.wrapperCheckbox}>
-                            <Checkbox
-                              label='Charger Included'
-                              checked={additionalDetails.charger_included || false}
-                              onChange={() => {
-                                const newChecked = !additionalDetails.charger_included;
-                                setAdditionalDetails(prev => ({
-                                  ...prev,
-                                  charger_included: newChecked,
-                                }));
-                                const yesAnswer = variant.question_answers.find(answer => answer.value.toLowerCase().includes('yes'));
-                                const noAnswer = variant.question_answers.find(answer => answer.value.toLowerCase().includes('no'));
-
-                                if (newChecked && yesAnswer) {
-                                  handleQuestionChange(variant.id, yesAnswer.id, yesAnswer.value);
-                                } else if (!newChecked && noAnswer) {
-                                  handleQuestionChange(variant.id, noAnswer.id, noAnswer.value);
-                                }
-                              }}
-                            />
-                          </div>
-                        )}
-                      </>
-                    )}
-
-                    {variant.question.toLowerCase().includes('battery health') && (
-                      <>
-                        <p className={css.title} style={{ marginBottom: 0 }}>
-                          Battery health
-                        </p>
-
-                        <p className={css.description}>{variant.description}</p>
-                        <p className={css.title} style={{ marginBottom: '12px' }}>
-                          Battery % (if applicable)
-                        </p>
-
-                        <div className={css.sliderContainer}>
-                          <input
-                            className={css.batterySlider}
-                            onChange={e => {
-                              const newBatteryHealth = Number(e.target.value);
-                              setBatteryHealth(newBatteryHealth);
-
-                              handleQuestionChange(variant.id, variant.id, e.target.value);
-                            }}
-                            type='range'
-                            min='0'
-                            max='100'
-                            value={batteryHealth}
-                            style={{
-                              background: `linear-gradient(to right, #45B549 0%, #45B549 ${batteryHealth}%, #E0E0E0 ${batteryHealth}%, #E0E0E0 100%)`,
-                            }}
-                          />
-                        </div>
-                        <p className={css.currentText}>Current: {batteryHealth}%</p>
-                      </>
-                    )}
-
-                    {getQuestionType(variant.question) === 'generic' && (
-                      <>
-                        <p className={css.title}>{variant.question}</p>
-                        {variant.description && <p className={css.description}>{variant.description}</p>}
-                        {variant.question_answers.length > 0 && (
-                          <div>
-                            {variant.question_answers.map(answer => (
-                              <div key={answer.id} className={css.wrapperCheckbox}>
-                                <Checkbox
-                                  label={answer.value}
-                                  checked={additionalDetails[answer.value] || false}
-                                  onChange={() => {
-                                    const newChecked = !additionalDetails[answer.value];
-                                    setAdditionalDetails(prev => ({
-                                      ...prev,
-                                      [answer.value]: newChecked,
-                                    }));
-                                    handleQuestionChange(variant.id, answer.id, answer.value);
-                                  }}
-                                />
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </>
-                    )}
-                  </div>
-                )}
-              </>
-            );
-          })}
-
         {step === 3 && getQuestionsForStep(3).length > 0 && (
           <>
-            <p className={css.text}>{getQuestionsForStep(3)[0]?.description}</p>
-
-            <div className={css.wrapperBntRadio}>
-              {getQuestionsForStep(3)[0]?.question_answers.length !== 0 && (
-                <ButtonRadio
-                  options={getQuestionsForStep(3)[0]?.question_answers.map(answer => answer.value) || []}
-                  value={selectedCondition}
-                  onChange={handleConditionChange}
-                />
-              )}
-            </div>
+            {getQuestionsForStep(3).map(question => (
+              <div key={question.id}>
+                <p className={css.title}>{question.question}</p>
+                {question.description && <p className={css.description}>{question.description}</p>}
+                <div className={css.wrapperBntRadio}>
+                  {question.question_answers.length > 0 && (
+                    <ButtonRadio
+                      options={question.question_answers.map(answer => answer.value)}
+                      value={(typeof answers[`question_${question.id}`] === 'string' || typeof answers[`question_${question.id}`] === 'number') 
+                        ? answers[`question_${question.id}`] as string | number 
+                        : ''}
+                      onChange={(value) => {
+                        const selectedAnswer = question.question_answers.find(answer => answer.value === value);
+                        if (selectedAnswer) {
+                          handleAnswerChange(question.id, selectedAnswer.id, value, 'radio');
+                        }
+                      }}
+                    />
+                  )}
+                </div>
+              </div>
+            ))}
           </>
         )}
       </>

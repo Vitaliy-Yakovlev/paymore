@@ -22,7 +22,7 @@ export const getDevicesByCategory = async (name: string, categoryId: number = 0)
 };
 
 export const getDeviceVariants = async (deviceId: number = 0): Promise<DeviceVariant[]> => {
-  let query = supabase.from('device_variants').select('*').eq('is_active', true);
+  let query = supabase.from('device_variants').select('*');
 
   if (deviceId > 0) {
     query = query.eq('device_id', deviceId);
@@ -40,7 +40,6 @@ export const getDeviceVariantById = async (deviceVariantId: number = 0): Promise
   const { data, error } = await supabase
     .from('device_variants')
     .select('*')
-    .eq('is_active', true)
     .eq('id', deviceVariantId)
     .single<DeviceVariant>();
 
