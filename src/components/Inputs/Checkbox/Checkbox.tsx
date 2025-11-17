@@ -1,23 +1,19 @@
 import css from './Checkbox.module.css';
 import { CheckboxProps } from './types';
 
-const Checkbox: React.FC<CheckboxProps> = ({ label, checked, onChange }) => {
-  const handleLabelClick = (e: React.MouseEvent<HTMLLabelElement>) => {
-    if ((e.target as HTMLElement).tagName === 'SPAN' && !(e.target as HTMLElement).classList.contains(css.checkmark)) {
-      e.preventDefault();
-    }
-  };
+const Checkbox: React.FC<CheckboxProps> = ({ label, checked, onChange, radioCheckbox }) => {
+  const handleClick = (e: React.ChangeEvent<HTMLInputElement>) => onChange(e);
 
   return (
-    <label className={css.checkboxLabel} onClick={handleLabelClick}>
+    <label className={!radioCheckbox ? css.checkboxLabel : css.checkboxLabelRadio}>
       <input
         name='checkbox'
         type='checkbox'
         checked={checked}
-        onChange={onChange}
-        className={`${css.checkboxInput} ${css.visuallyHidden}`}
+        onChange={handleClick}
+        className={`${!radioCheckbox ? css.checkboxInput : css.checkboxInputRadio} ${css.visuallyHidden}`}
       />
-      <span className={css.checkmark} />
+      <span className={!radioCheckbox ? css.checkmark : css.checkmarkRadio} />
       {label}
     </label>
   );

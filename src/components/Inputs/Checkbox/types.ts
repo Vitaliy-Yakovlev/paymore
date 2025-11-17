@@ -4,4 +4,5 @@ export interface CheckboxProps {
   label: string | React.ReactNode;
   checked: boolean;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  radioCheckbox?: boolean;
 }
