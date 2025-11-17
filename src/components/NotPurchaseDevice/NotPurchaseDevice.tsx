@@ -5,7 +5,7 @@ import { NotPurchaseDeviceProps } from './types';
 import DeviceList from '../DeviceList';
 import Button from '../Button';
 import InputSearch from '../Inputs/InputSearch';
-import Checkbox from '../Checkbox/Checkbox';
+import Checkbox from '../Inputs/Checkbox/Checkbox';
 import ButtonRadio from '../ButtonRadio';
 import css from './NotPurchaseDevice.module.css';
 

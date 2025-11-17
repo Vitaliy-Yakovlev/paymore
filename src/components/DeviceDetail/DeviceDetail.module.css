@@ -45,6 +45,12 @@
   margin-bottom: 20px;
 }
 
+.wrapperCheckboxRadio {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
 .wrapperRadioBtn {
   display: grid;
   grid-template-columns: 1fr 1fr;

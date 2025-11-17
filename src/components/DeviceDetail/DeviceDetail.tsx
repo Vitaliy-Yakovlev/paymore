@@ -4,7 +4,7 @@ import { CategorialQuestions } from '../../services/categoryService';
 import { DeviceVariant } from '../../types/category';
 import Button from '../Button';
 import ButtonRadio from '../ButtonRadio';
-import Checkbox from '../Checkbox';
+import Checkbox from '../Inputs/Checkbox';
 import css from './DeviceDetail.module.css';
 
 interface CategorialQuestionWithAnswers extends CategorialQuestions {
@@ -48,7 +48,7 @@ const DeviceDetail: React.FC<DeviceDetailProps> = ({
   const [answers, setAnswers] = useState<QuestionAnswersState>({
     storage: currentSelectedDevice?.storage || '',
   });
-
+  console.log('🚀 ~ answers:', answers);
 
   const getQuestionsForStep = (stepNumber: number) => {
     if (stepNumber === 2) {
@@ -66,8 +66,11 @@ const DeviceDetail: React.FC<DeviceDetailProps> = ({
     answerId: number,
     value: string | number,
     questionType?: string,
-    answerValue?: string
+    answerValue?: string,
+    questionName?: string,
   ) => {
+    const normalizedQuestionName = questionName ? questionName.toLowerCase().replace(/\s+/g, '_') : '';
+
     setAnswers(prev => {
       const newAnswers = { ...prev };
 
@@ -75,7 +78,6 @@ const DeviceDetail: React.FC<DeviceDetailProps> = ({
         // Handle storage selection
         const newValue = value === prev.storage ? '' : value;
         newAnswers.storage = newValue;
-
         // Find selected variant and pass to parent component
         const selectedVariant = deviceVariants.find(variant => variant.label === newValue);
         if (selectedVariant && newValue) {
@@ -94,10 +96,28 @@ const DeviceDetail: React.FC<DeviceDetailProps> = ({
           handleQuestionChange(questionId, answerId, value.toString());
         }
       } else if (questionType === 'checkbox' || questionType === 'multiple_choice') {
-        if (answerValue) {
-          const currentValue = prev[answerValue] || false;
-          newAnswers[answerValue] = !currentValue;
-          handleQuestionChange(questionId, answerId, answerValue);
+        if (normalizedQuestionName && answerValue) {
+          // Create unique key combining question name and answer value
+          const uniqueKey = `${normalizedQuestionName}_${answerValue.toLowerCase().replace(/\s+/g, '_')}`;
+          const currentValue = prev[uniqueKey] || false;
+
+          // Find the question to get all possible answers
+          const question = categorialQuestions.find(q => q.id === questionId);
+
+          // Clear all answers for this question first
+          if (question) {
+            question.question_answers.forEach(ans => {
+              const ansKey = `${normalizedQuestionName}_${ans.value.toLowerCase().replace(/\s+/g, '_')}`;
+              newAnswers[ansKey] = false;
+            });
+          }
+
+          // Set the selected answer (toggle off if already selected)
+          newAnswers[uniqueKey] = !currentValue;
+
+          if (!currentValue) {
+            handleQuestionChange(questionId, answerId, answerValue);
+          }
         }
       } else {
         const question = categorialQuestions.find(q => q.id === questionId);
@@ -155,18 +175,18 @@ const DeviceDetail: React.FC<DeviceDetailProps> = ({
         }
         // For checkbox/multiple_choice, check if at least one answer is selected
         else if (questionType === 'checkbox' || questionType === 'multiple_choice') {
-          const hasAnswer = question.question_answers.some(
-            answer => answers[answer.value] === true
-          );
+          const normalizedQuestionName = question.question.toLowerCase().replace(/\s+/g, '_');
+          const hasAnswer = question.question_answers.some(answer => {
+            const uniqueKey = `${normalizedQuestionName}_${answer.value.toLowerCase().replace(/\s+/g, '_')}`;
+            return answers[uniqueKey] === true;
+          });
           if (!hasAnswer) {
             return false;
           }
         }
         // For unknown types, check if question has an answer (default to single choice behavior)
         else {
-          const hasAnswer = question.question_answers.some(
-            answer => answers[answer.value] === true || answers[`question_${question.id}`]
-          );
+          const hasAnswer = question.question_answers.some(answer => answers[answer.value] === true || answers[`question_${question.id}`]);
           if (question.question_answers.length > 0 && !hasAnswer) {
             return false;
           }
@@ -248,7 +268,7 @@ const DeviceDetail: React.FC<DeviceDetailProps> = ({
                   <ButtonRadio
                     options={optionsStorage}
                     value={answers.storage || ''}
-                    onChange={(value) => handleAnswerChange(0, 0, value, 'storage')}
+                    onChange={value => handleAnswerChange(0, 0, value, 'storage')}
                   />
                 </div>
               </>
@@ -256,19 +276,18 @@ const DeviceDetail: React.FC<DeviceDetailProps> = ({
 
             {getQuestionsForStep(2).map(question => {
               const questionType = question.question_type?.toLowerCase() || '';
-              
+
               return (
                 <div key={question.id}>
-                  <p className={css.title}>{question.question}{question.id}{questionType}{answers[`question_${question.id}`]}</p>
-                  {question.description && <p className={css.description}>{question.description}</p>}
-                  
+                  <p className={css.title}>{question.question}</p>
+
                   {/* Render based on question_type */}
                   {questionType === 'range' || questionType === 'slider' ? (
                     <>
                       <div className={css.sliderContainer}>
                         <input
                           className={css.batterySlider}
-                          onChange={(e) => handleAnswerChange(question.id, question.id, e.target.value, questionType)}
+                          onChange={e => handleAnswerChange(question.id, question.id, e.target.value, questionType)}
                           type='range'
                           min='0'
                           max='100'
@@ -285,10 +304,12 @@ const DeviceDetail: React.FC<DeviceDetailProps> = ({
                       {question.question_answers.length > 0 && (
                         <ButtonRadio
                           options={question.question_answers.map(answer => answer.value)}
-                          value={(typeof answers[`question_${question.id}`] === 'string' || typeof answers[`question_${question.id}`] === 'number') 
-                            ? answers[`question_${question.id}`] as string | number 
-                            : ''}
-                          onChange={(value) => {
+                          value={
+                            typeof answers[`question_${question.id}`] === 'string' || typeof answers[`question_${question.id}`] === 'number'
+                              ? (answers[`question_${question.id}`] as string | number)
+                              : ''
+                          }
+                          onChange={value => {
                             const selectedAnswer = question.question_answers.find(answer => answer.value === value);
                             if (selectedAnswer) {
                               handleAnswerChange(question.id, selectedAnswer.id, value, questionType);
@@ -298,16 +319,30 @@ const DeviceDetail: React.FC<DeviceDetailProps> = ({
                       )}
                     </div>
                   ) : questionType === 'checkbox' || questionType === 'multiple_choice' || question.question_answers.length > 1 ? (
-                    <div>
-                      {question.question_answers.map(answer => (
-                        <div key={answer.id} className={css.wrapperCheckbox}>
-                          <Checkbox
-                            label={answer.value}
-                            checked={Boolean(answers[answer.value]) || false}
-                            onChange={() => handleAnswerChange(question.id, answer.id, answer.value, questionType || 'checkbox', answer.value)}
-                          />
-                        </div>
-                      ))}
+                    <div className={question.question_answers.some(a => ['Yes', 'No'].includes(a.value)) ? css.wrapperCheckboxRadio : ''}>
+                      {question.question_answers.map(answer => {
+                        const normalizedQuestionName = question.question.toLowerCase().replace(/\s+/g, '_');
+                        const uniqueKey = `${normalizedQuestionName}_${answer.value.toLowerCase().replace(/\s+/g, '_')}`;
+                        return (
+                          <div key={answer.id} className={!['Yes', 'No'].includes(answer.value) ? css.wrapperCheckbox : ''}>
+                            <Checkbox
+                              radioCheckbox={['Yes', 'No'].includes(answer.value)}
+                              label={answer.value}
+                              checked={Boolean(answers[uniqueKey]) || false}
+                              onChange={() =>
+                                handleAnswerChange(
+                                  question.id,
+                                  answer.id,
+                                  answer.value,
+                                  questionType || 'checkbox',
+                                  answer.value,
+                                  question.question,
+                                )
+                              }
+                            />
+                          </div>
+                        );
+                      })}
                     </div>
                   ) : question.question_answers.length === 1 ? (
                     // Single answer - render as checkbox for yes/no or radio for other
@@ -315,7 +350,15 @@ const DeviceDetail: React.FC<DeviceDetailProps> = ({
                       <Checkbox
                         label={question.question_answers[0].value}
                         checked={Boolean(answers[question.question_answers[0].value]) || false}
-                        onChange={() => handleAnswerChange(question.id, question.question_answers[0].id, question.question_answers[0].value, questionType || 'checkbox', question.question_answers[0].value)}
+                        onChange={() =>
+                          handleAnswerChange(
+                            question.id,
+                            question.question_answers[0].id,
+                            question.question_answers[0].value,
+                            questionType || 'checkbox',
+                            question.question_answers[0].value,
+                          )
+                        }
                       />
                     </div>
                   ) : null}
@@ -335,10 +378,12 @@ const DeviceDetail: React.FC<DeviceDetailProps> = ({
                   {question.question_answers.length > 0 && (
                     <ButtonRadio
                       options={question.question_answers.map(answer => answer.value)}
-                      value={(typeof answers[`question_${question.id}`] === 'string' || typeof answers[`question_${question.id}`] === 'number') 
-                        ? answers[`question_${question.id}`] as string | number 
-                        : ''}
-                      onChange={(value) => {
+                      value={
+                        typeof answers[`question_${question.id}`] === 'string' || typeof answers[`question_${question.id}`] === 'number'
+                          ? (answers[`question_${question.id}`] as string | number)
+                          : ''
+                      }
+                      onChange={value => {
                         const selectedAnswer = question.question_answers.find(answer => answer.value === value);
                         if (selectedAnswer) {
                           handleAnswerChange(question.id, selectedAnswer.id, value, 'radio');

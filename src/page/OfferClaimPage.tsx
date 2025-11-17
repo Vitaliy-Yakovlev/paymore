@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router';
 import confetti from 'canvas-confetti';
-import Checkbox from '../components/Checkbox';
+import Checkbox from '../components/Inputs/Checkbox';
 import Button from '../components/Button';
 
 const OfferClaimPage: React.FC = () => {

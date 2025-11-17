@@ -1,0 +1,109 @@
+.checkboxInputRadio {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.checkboxLabelRadio {
+  position: relative;
+  z-index: 2;
+  display: flex;
+
+  padding: 23px;
+  justify-content: center;
+  align-items: center;
+  flex-shrink: 0;
+
+  cursor: pointer;
+}
+
+.checkboxLabelRadio:hover .checkmarkRadio {
+  border: 1px solid #45b549;
+  background: #e3ffe4;
+}
+
+.checkmarkRadio {
+  position: absolute;
+  z-index: -1;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+
+  border-radius: 6px;
+  border: 1px solid #d1d8d8;
+  background: #fff;
+
+  transition:
+    border 250ms cubic-bezier(0.4, 0, 0.2, 1),
+    background-color 250ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.checkboxInputRadio:checked ~ .checkmarkRadio {
+  border: 0px solid #d1d8d8;
+}
+
+.checkboxInputRadio:checked ~ .checkmarkRadio::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  border-radius: 5px;
+  z-index: 1;
+  border: 2px solid #45b549;
+  background-color: #e3ffe4;
+}
+
+.checkboxLabel {
+  position: relative;
+  display: flex;
+  align-items: center;
+  color: #1a1a1a;
+  font-family: Inter;
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 24px;
+  padding-left: 38px;
+  cursor: pointer;
+
+  white-space: nowrap;
+}
+.checkboxInput:checked ~ .checkmark::before {
+  content: '';
+  position: absolute;
+  left: 0px;
+  top: 0px;
+  right: 0px;
+  bottom: 0px;
+  border-radius: 3px;
+
+  background-color: #45b549;
+  background-image: url('../../../../public/img/checked-icon.svg');
+  background-size: 11px 9px;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.checkmark {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  transform: translate(0, -50%);
+  height: 20px;
+  width: 20px;
+  background-color: #fff;
+  border-radius: 5px;
+  border: 2px solid rgba(91, 91, 91, 0.3);
+  transition: background-color 250ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.visuallyHidden {
+  position: absolute;
+  clip: rect(0 0 0 0);
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+}
