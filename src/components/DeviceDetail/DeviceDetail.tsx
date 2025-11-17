@@ -325,29 +325,38 @@ const DeviceDetail: React.FC<DeviceDetailProps> = ({
                           : css.wrapperCheckbox
                       }
                     >
-                      {question.question_answers.map(answer => {
-                        const normalizedQuestionName = question.question.toLowerCase().replace(/\s+/g, '_');
-                        const uniqueKey = `${normalizedQuestionName}_${answer.value.toLowerCase().replace(/\s+/g, '_')}`;
-                        return (
-                          <div key={answer.id} className={!['Yes', 'No'].includes(answer.value) ? css.wrapperCheckbox : ''}>
-                            <Checkbox
-                              radioCheckbox={['Yes', 'No'].includes(answer.value)}
-                              label={answer.value}
-                              checked={Boolean(answers[uniqueKey]) || false}
-                              onChange={() =>
-                                handleAnswerChange(
-                                  question.id,
-                                  answer.id,
-                                  answer.value,
-                                  questionType || 'checkbox',
-                                  answer.value,
-                                  question.question,
-                                )
-                              }
-                            />
-                          </div>
-                        );
-                      })}
+                      {question.question_answers
+                        .sort((a, b) => {
+                          const hasYesNo = question.question_answers.some(ans => ['Yes', 'No'].includes(ans.value));
+                          if (hasYesNo) {
+                            if (a.value === 'Yes') return -1;
+                            if (b.value === 'Yes') return 1;
+                          }
+                          return 0;
+                        })
+                        .map(answer => {
+                          const normalizedQuestionName = question.question.toLowerCase().replace(/\s+/g, '_');
+                          const uniqueKey = `${normalizedQuestionName}_${answer.value.toLowerCase().replace(/\s+/g, '_')}`;
+                          return (
+                            <div key={answer.id} className={!['Yes', 'No'].includes(answer.value) ? css.wrapperCheckbox : ''}>
+                              <Checkbox
+                                radioCheckbox={['Yes', 'No'].includes(answer.value)}
+                                label={answer.value}
+                                checked={Boolean(answers[uniqueKey]) || false}
+                                onChange={() =>
+                                  handleAnswerChange(
+                                    question.id,
+                                    answer.id,
+                                    answer.value,
+                                    questionType || 'checkbox',
+                                    answer.value,
+                                    question.question,
+                                  )
+                                }
+                              />
+                            </div>
+                          );
+                        })}
                     </div>
                   ) : question.question_answers.length === 1 ? (
                     // Single answer - render as checkbox for yes/no or radio for other

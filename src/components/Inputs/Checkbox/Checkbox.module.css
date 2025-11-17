@@ -68,8 +68,6 @@
   line-height: 24px;
   padding-left: 38px;
   cursor: pointer;
-
-  white-space: nowrap;
 }
 .checkboxInput:checked ~ .checkmark::before {
   content: '';
