@@ -4,7 +4,7 @@ import { CategorialQuestions } from '../../services/categoryService';
 import { DeviceVariant } from '../../types/category';
 import Button from '../Button';
 import ButtonRadio from '../ButtonRadio';
-import Checkbox from '../Checkbox';
+import Checkbox from '../Inputs/Checkbox';
 import css from './DeviceDetail.module.css';
 
 interface CategorialQuestionWithAnswers extends CategorialQuestions {
@@ -43,19 +43,35 @@ const DeviceDetail: React.FC<DeviceDetailProps> = ({
   const [additionalDetails, setAdditionalDetails] = useState<{ [key: string]: boolean }>({});
   const initializedRef = useRef(false);
 
-  const initializeBatteryHealth = useCallback(() => {
+  const initializeQuestions = useCallback(() => {
     if (!initializedRef.current && categorialQuestions.length > 0) {
       const batteryQuestion = categorialQuestions.find(q => q.question.toLowerCase().includes('battery health'));
+      const additionalQuestions = categorialQuestions.filter(q => q.question_type.toLowerCase().includes('checkbox'));
       if (batteryQuestion) {
         handleQuestionChange(batteryQuestion.id, batteryQuestion.id, batteryHealth.toString());
         initializedRef.current = true;
       }
+
+      if (additionalQuestions) {
+        additionalQuestions.forEach(question => {
+          const newChecked = additionalDetails[question.question.toLowerCase().replace(/ /g, '_')];
+          setAdditionalDetails({ [question.question.toLowerCase().replace(/ /g, '_')]: newChecked });
+          const yesAnswer = question.question_answers.find(answer => answer.value.toLowerCase().includes('yes'));
+          const noAnswer = question.question_answers.find(answer => answer.value.toLowerCase().includes('no'));
+
+          if (newChecked && yesAnswer) {
+            handleQuestionChange(question.id, yesAnswer.id, yesAnswer.value);
+          } else if (!newChecked && noAnswer) {
+            handleQuestionChange(question.id, noAnswer.id, noAnswer.value);
+          }
+        });
+      }
     }
-  }, [categorialQuestions, batteryHealth, handleQuestionChange]);
+  }, [categorialQuestions, handleQuestionChange, batteryHealth, additionalDetails]);
 
   useEffect(() => {
-    initializeBatteryHealth();
-  }, [initializeBatteryHealth]);
+    initializeQuestions();
+  }, [initializeQuestions]);
 
   const getQuestionsForStep = (stepNumber: number) => {
     if (stepNumber === 2) {
@@ -67,13 +83,16 @@ const DeviceDetail: React.FC<DeviceDetailProps> = ({
     return [];
   };
 
+  const getQuestionsCheckbox = getQuestionsForStep(2).filter(q => q.question_type === 'checkbox');
+  const getQuestionsSlider = getQuestionsForStep(2).filter(q => q.question_type === 'slider');
+
   const getQuestionType = (question: string) => {
     const lowerQuestion = question.toLowerCase();
 
     if (lowerQuestion.includes('storage')) {
       return 'storage';
     }
-    if (lowerQuestion.includes('additional details') || lowerQuestion.includes('charger included')) {
+    if (['charger included', 'additional details', 'original box included'].includes(lowerQuestion)) {
       return 'additional_details';
     }
     if (lowerQuestion.includes('battery health')) {
@@ -108,7 +127,7 @@ const DeviceDetail: React.FC<DeviceDetailProps> = ({
             }
             break;
           case 'additional_details':
-            if (question.question.toLowerCase().includes('charger included')) {
+            if (['charger included', 'additional details', 'original box included'].includes(question.question.toLowerCase())) {
               continue;
             }
 
@@ -197,6 +216,7 @@ const DeviceDetail: React.FC<DeviceDetailProps> = ({
         const bSize = parseStorageSize(b);
         return aSize - bSize;
       }) || [];
+  console.log('🚀 ~ optionsStorage:', optionsStorage);
 
   return (
     <div>
@@ -222,105 +242,112 @@ const DeviceDetail: React.FC<DeviceDetailProps> = ({
           </>
         )}
 
-        {getQuestionsForStep(2).length !== 0 &&
-          getQuestionsForStep(2).map(variant => {
-            return (
-              <>
-                {step === 2 && (
-                  <div key={variant.id}>
-                    {getQuestionType(variant.question) === 'additional_details' && (
+        <div className={css.wrapperQuestions}>
+          <>
+            <p className={css.title}>Additional details</p>
+            <div className={css.wrapperCheckbox}>
+              {getQuestionsCheckbox.length !== 0 &&
+                getQuestionsCheckbox.map(variant => {
+                  return (
+                    step === 2 && (
                       <>
-                        <p className={css.title}>{variant.question}</p>
-                        {variant.question.toLowerCase().includes('charger included') && (
-                          <div className={css.wrapperCheckbox}>
-                            <Checkbox
-                              label='Charger Included'
-                              checked={additionalDetails.charger_included || false}
-                              onChange={() => {
-                                const newChecked = !additionalDetails.charger_included;
-                                setAdditionalDetails(prev => ({
-                                  ...prev,
-                                  charger_included: newChecked,
-                                }));
-                                const yesAnswer = variant.question_answers.find(answer => answer.value.toLowerCase().includes('yes'));
-                                const noAnswer = variant.question_answers.find(answer => answer.value.toLowerCase().includes('no'));
+                        {variant.question_type === 'checkbox' && (
+                          <>
+                            {['charger included', 'additional details', 'original box included'].includes(
+                              variant.question.toLowerCase(),
+                            ) && (
+                              <Checkbox
+                                label={variant.question}
+                                checked={additionalDetails[variant.question.toLowerCase().replace(/ /g, '_')] || false}
+                                onChange={() => {
+                                  const newChecked = !additionalDetails[variant.question.toLowerCase().replace(/ /g, '_')];
+                                  setAdditionalDetails(prev => ({
+                                    ...prev,
+                                    [variant.question.toLowerCase().replace(/ /g, '_')]: newChecked,
+                                  }));
+                                  const yesAnswer = variant.question_answers.find(answer => answer.value.toLowerCase().includes('yes'));
+                                  const noAnswer = variant.question_answers.find(answer => answer.value.toLowerCase().includes('no'));
 
-                                if (newChecked && yesAnswer) {
-                                  handleQuestionChange(variant.id, yesAnswer.id, yesAnswer.value);
-                                } else if (!newChecked && noAnswer) {
-                                  handleQuestionChange(variant.id, noAnswer.id, noAnswer.value);
-                                }
-                              }}
-                            />
-                          </div>
+                                  if (newChecked && yesAnswer) {
+                                    handleQuestionChange(variant.id, yesAnswer.id, yesAnswer.value);
+                                  } else if (!newChecked && noAnswer) {
+                                    handleQuestionChange(variant.id, noAnswer.id, noAnswer.value);
+                                  }
+                                }}
+                              />
+                            )}
+                          </>
                         )}
-                      </>
-                    )}
 
-                    {variant.question.toLowerCase().includes('battery health') && (
-                      <>
-                        <p className={css.title} style={{ marginBottom: 0 }}>
-                          Battery health
-                        </p>
-
-                        <p className={css.description}>{variant.description}</p>
-                        <p className={css.title} style={{ marginBottom: '12px' }}>
-                          Battery % (if applicable)
-                        </p>
-
-                        <div className={css.sliderContainer}>
-                          <input
-                            className={css.batterySlider}
-                            onChange={e => {
-                              const newBatteryHealth = Number(e.target.value);
-                              setBatteryHealth(newBatteryHealth);
-
-                              handleQuestionChange(variant.id, variant.id, e.target.value);
-                            }}
-                            type='range'
-                            min='0'
-                            max='100'
-                            value={batteryHealth}
-                            style={{
-                              background: `linear-gradient(to right, #45B549 0%, #45B549 ${batteryHealth}%, #E0E0E0 ${batteryHealth}%, #E0E0E0 100%)`,
-                            }}
-                          />
-                        </div>
-                        <p className={css.currentText}>Current: {batteryHealth}%</p>
-                      </>
-                    )}
-
-                    {getQuestionType(variant.question) === 'generic' && (
-                      <>
-                        <p className={css.title}>{variant.question}</p>
-                        {variant.description && <p className={css.description}>{variant.description}</p>}
-                        {variant.question_answers.length > 0 && (
-                          <div>
-                            {variant.question_answers.map(answer => (
-                              <div key={answer.id} className={css.wrapperCheckbox}>
-                                <Checkbox
-                                  label={answer.value}
-                                  checked={additionalDetails[answer.value] || false}
-                                  onChange={() => {
-                                    const newChecked = !additionalDetails[answer.value];
-                                    setAdditionalDetails(prev => ({
-                                      ...prev,
-                                      [answer.value]: newChecked,
-                                    }));
-                                    handleQuestionChange(variant.id, answer.id, answer.value);
-                                  }}
-                                />
+                        {getQuestionType(variant.question) === 'generic' && (
+                          <>
+                            <p className={css.title}>{variant.question}</p>
+                            {variant.description && <p className={css.description}>{variant.description}</p>}
+                            {variant.question_answers.length > 0 && (
+                              <div>
+                                {variant.question_answers.map(answer => (
+                                  <div key={answer.id} className={css.wrapperCheckbox}>
+                                    <Checkbox
+                                      label={answer.value}
+                                      checked={additionalDetails[answer.value] || false}
+                                      onChange={() => {
+                                        const newChecked = !additionalDetails[answer.value];
+                                        setAdditionalDetails(prev => ({
+                                          ...prev,
+                                          [answer.value]: newChecked,
+                                        }));
+                                        handleQuestionChange(variant.id, answer.id, answer.value);
+                                      }}
+                                    />
+                                  </div>
+                                ))}
                               </div>
-                            ))}
-                          </div>
+                            )}
+                          </>
                         )}
                       </>
-                    )}
-                  </div>
-                )}
-              </>
-            );
-          })}
+                    )
+                  );
+                })}
+            </div>
+            {getQuestionsSlider.length !== 0 &&
+              getQuestionsSlider.map(
+                variant =>
+                  variant.question.toLowerCase().includes('battery health') && (
+                    <div>
+                      <p className={css.title} style={{ marginBottom: 0 }}>
+                        Battery health
+                      </p>
+
+                      <p className={css.description}>{variant.description}</p>
+                      <p className={css.title} style={{ marginBottom: '12px' }}>
+                        Battery % (if applicable)
+                      </p>
+
+                      <div className={css.sliderContainer}>
+                        <input
+                          className={css.batterySlider}
+                          onChange={e => {
+                            const newBatteryHealth = Number(e.target.value);
+                            setBatteryHealth(newBatteryHealth);
+
+                            handleQuestionChange(variant.id, variant.id, e.target.value);
+                          }}
+                          type='range'
+                          min='0'
+                          max='100'
+                          value={batteryHealth}
+                          style={{
+                            background: `linear-gradient(to right, #45B549 0%, #45B549 ${batteryHealth}%, #E0E0E0 ${batteryHealth}%, #E0E0E0 100%)`,
+                          }}
+                        />
+                      </div>
+                      <p className={css.currentText}>Current: {batteryHealth}%</p>
+                    </div>
+                  ),
+              )}
+          </>
+        </div>
 
         {step === 3 && getQuestionsForStep(3).length > 0 && (
           <>
