@@ -8,6 +8,32 @@
   margin-bottom: 29px;
 }
 
+.wrapperStep {
+  display: flex;
+  flex-direction: column;
+}
+
+.wrapperQuestion[data-type='checkbox'],
+.wrapperQuestion[data-type='multiple_choice'] {
+  order: 1;
+}
+
+.storageSection {
+  order: 2;
+}
+
+.wrapperQuestion[data-type='range'],
+.wrapperQuestion[data-type='slider'],
+.wrapperQuestion[data-type='radio'],
+.wrapperQuestion[data-type='single_choice'],
+.wrapperQuestion[data-type='other'] {
+  order: 3;
+}
+
+.wrapperQuestion {
+  margin-bottom: 20px;
+}
+
 .title {
   color: #000;
   font-family: Inter;
