@@ -48,7 +48,6 @@ const DeviceDetail: React.FC<DeviceDetailProps> = ({
   const [answers, setAnswers] = useState<QuestionAnswersState>({
     storage: currentSelectedDevice?.storage || '',
   });
-  console.log('🚀 ~ answers:', answers);
 
   const getQuestionsForStep = (stepNumber: number) => {
     if (stepNumber === 2) {
@@ -259,10 +258,10 @@ const DeviceDetail: React.FC<DeviceDetailProps> = ({
 
       <>
         {step === 2 && (
-          <>
-            {/* First show storage selection (deviceVariants) */}
+          <div className={css.wrapperStep}>
+            {/* Storage section with order */}
             {deviceVariants && optionsStorage.length > 0 && (
-              <>
+              <div className={css.storageSection}>
                 <p className={css.title}>Storage size</p>
                 <div className={css.wrapperRadioBtn}>
                   <ButtonRadio
@@ -271,19 +270,19 @@ const DeviceDetail: React.FC<DeviceDetailProps> = ({
                     onChange={value => handleAnswerChange(0, 0, value, 'storage')}
                   />
                 </div>
-              </>
+              </div>
             )}
 
             {getQuestionsForStep(2).map(question => {
               const questionType = question.question_type?.toLowerCase() || '';
 
               return (
-                <div key={question.id}>
+                <div key={question.id} className={css.wrapperQuestion} data-type={questionType || 'other'}>
                   <p className={css.title}>{question.question}</p>
 
                   {/* Render based on question_type */}
                   {questionType === 'range' || questionType === 'slider' ? (
-                    <>
+                    <div className={css.wrapperSlider}>
                       <div className={css.sliderContainer}>
                         <input
                           className={css.batterySlider}
@@ -298,7 +297,7 @@ const DeviceDetail: React.FC<DeviceDetailProps> = ({
                         />
                       </div>
                       <p className={css.currentText}>Current: {Number(answers[`question_${question.id}`]) || 74}%</p>
-                    </>
+                    </div>
                   ) : questionType === 'radio' || questionType === 'single_choice' ? (
                     <div className={css.wrapperBntRadio}>
                       {question.question_answers.length > 0 && (
@@ -319,7 +318,13 @@ const DeviceDetail: React.FC<DeviceDetailProps> = ({
                       )}
                     </div>
                   ) : questionType === 'checkbox' || questionType === 'multiple_choice' || question.question_answers.length > 1 ? (
-                    <div className={question.question_answers.some(a => ['Yes', 'No'].includes(a.value)) ? css.wrapperCheckboxRadio : ''}>
+                    <div
+                      className={
+                        question.question_answers.some(a => ['Yes', 'No'].includes(a.value))
+                          ? css.wrapperCheckboxRadio
+                          : css.wrapperCheckbox
+                      }
+                    >
                       {question.question_answers.map(answer => {
                         const normalizedQuestionName = question.question.toLowerCase().replace(/\s+/g, '_');
                         const uniqueKey = `${normalizedQuestionName}_${answer.value.toLowerCase().replace(/\s+/g, '_')}`;
@@ -365,7 +370,7 @@ const DeviceDetail: React.FC<DeviceDetailProps> = ({
                 </div>
               );
             })}
-          </>
+          </div>
         )}
 
         {step === 3 && getQuestionsForStep(3).length > 0 && (
