@@ -30,7 +30,7 @@ export async function getDeviceVariantPrice(
 
   if (error) return 0;
 
-  var sale_price = device_variant?.price;
+  var sale_price = device_variant?.sale_price;
   sale_price = sale_price - category?.shipping_cost;
   data?.forEach(answer => {
     if (answer.weight_type === 'absolute') {

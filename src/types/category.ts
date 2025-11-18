@@ -47,7 +47,7 @@ export interface Device {
 export interface DeviceVariant {
   id: number;
   device_id: number;
-  price: number;
+  sale_price: number;
   label: string;
   created_at: string;
   updated_at: string;
