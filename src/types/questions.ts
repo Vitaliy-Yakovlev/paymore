@@ -2,6 +2,8 @@ export interface QuestionAnswer {
   id: number;
   question_id: number;
   value: string;
+  weight: number;
+  weight_type: string;
   is_active: boolean;
 }
 

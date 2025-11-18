@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase';
 import { Database } from '../lib/supabase';
 import { handleSupabaseError } from '../utils/handleSupabaseError';
 import { Category } from '../types/category';
+import { QuestionAnswer } from '../types/questions';
 
 // export type Category = Database['public']['Tables']['categories']['Row']
 export type CategorialQuestions = Database['public']['Tables']['categorial_questions']['Row'];
@@ -43,3 +44,24 @@ export async function getCategorialQuestions(categoryId: number = 0): Promise<Ca
   if (error) return handleSupabaseError('getCategorialQuestions', error);
   return (data as any) ?? [];
 }
+
+export async function getAnswerByValue(value: number, question_id: number): Promise<QuestionAnswer | null> {
+  var matchingAnswer: QuestionAnswer | null = null;
+  const { data, error } = await supabase
+    .from('question_answers')
+    .select('*')
+    .eq('is_active', true)
+    .eq('question_id', question_id);
+
+  data?.forEach(answer => {
+    const min = Number(answer.value.split('-')[0]);
+    const max = Number(answer.value.split('-')[1]) || min;
+    const answerValue = min <= value && value <= max ? value : null;
+    if (answerValue !== null) {
+      matchingAnswer = answer;
+    } 
+  });
+
+  if (error) return null;
+  return matchingAnswer;
+} 

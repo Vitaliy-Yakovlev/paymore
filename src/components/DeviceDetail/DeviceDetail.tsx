@@ -1,11 +1,13 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
-import { CategorialQuestions } from '../../services/categoryService';
+import { CategorialQuestions, getAnswerByValue } from '../../services/categoryService';
 import { DeviceVariant } from '../../types/category';
 import Button from '../Button';
 import ButtonRadio from '../ButtonRadio';
 import Checkbox from '../Inputs/Checkbox';
 import css from './DeviceDetail.module.css';
+import { QuestionAnswer } from '../../types/questions';
+
 
 interface CategorialQuestionWithAnswers extends CategorialQuestions {
   question_answers: Array<{
@@ -44,6 +46,9 @@ const DeviceDetail: React.FC<DeviceDetailProps> = ({
 }) => {
   const navigate = useNavigate();
   const { brand, model } = useParams();
+  const [answer, setAnswer] = useState<QuestionAnswer | null>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   // Unified state for all question answers
   const [answers, setAnswers] = useState<QuestionAnswersState>({
     storage: currentSelectedDevice?.storage || '',
@@ -58,6 +63,29 @@ const DeviceDetail: React.FC<DeviceDetailProps> = ({
     }
     return [];
   };
+
+  const handleDebouncedChange = ({
+      question_id,
+      value,
+      questionType,
+    }: {
+      question_id: number;   // adjust type to match your actual structure
+      value: string | number;
+      questionType: string;
+    }) => {
+      // Cancel previous timeout
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+
+      // Delay callback
+      timeoutRef.current = setTimeout(() => {
+        handleAnswerChange(
+          question_id,
+          question_id,
+          value,
+          questionType
+        );
+      }, 500); // <-- delay in ms
+    };
 
   // Unified onChange handler for all question types
   const handleAnswerChange = (
@@ -87,7 +115,11 @@ const DeviceDetail: React.FC<DeviceDetailProps> = ({
         }
       } else if (questionType === 'range' || questionType === 'slider') {
         newAnswers[`question_${questionId}`] = value;
-        handleQuestionChange(questionId, questionId, value.toString());
+        getAnswerByValue(Number(value), questionId).then(data => {
+          if (data) {
+            handleQuestionChange(questionId, data.id, value.toString());
+          }
+        });
       } else if (questionType === 'radio' || questionType === 'single_choice') {
         const newValue = value === prev[`question_${questionId}`] ? '' : value;
         newAnswers[`question_${questionId}`] = newValue;
@@ -143,12 +175,12 @@ const DeviceDetail: React.FC<DeviceDetailProps> = ({
     if (step === 2) {
       const step2Questions = getQuestionsForStep(2);
 
-      if (step2Questions.length === 0 && optionsStorage.length === 0) {
+      if (step2Questions.length === 0 && variantsAvailable.length === 0) {
         return true;
       }
 
       // Check storage if variants exist
-      if (optionsStorage.length > 0 && !Boolean(answers.storage)) {
+      if (variantsAvailable.length > 0 && !Boolean(answers.storage)) {
         return false;
       }
 
@@ -231,7 +263,7 @@ const DeviceDetail: React.FC<DeviceDetailProps> = ({
     }
   };
 
-  const optionsStorage: string[] =
+  const variantsAvailable: string[] =
     (deviceVariants || [])
       .map((variant: DeviceVariant) => variant?.label)
       .filter(Boolean) // Remove null/undefined values
@@ -259,13 +291,13 @@ const DeviceDetail: React.FC<DeviceDetailProps> = ({
       <>
         {step === 2 && (
           <div className={css.wrapperStep}>
-            {/* Storage section with order */}
-            {deviceVariants && optionsStorage.length > 0 && (
+            {/* Variant section with order */}
+            {deviceVariants && variantsAvailable.length > 0 && (
               <div className={css.storageSection}>
-                <p className={css.title}>Storage size</p>
+                <p className={css.title}>Select Your Variant</p>
                 <div className={css.wrapperRadioBtn}>
                   <ButtonRadio
-                    options={optionsStorage}
+                    options={variantsAvailable}
                     value={answers.storage || ''}
                     onChange={value => handleAnswerChange(0, 0, value, 'storage')}
                   />
@@ -286,7 +318,13 @@ const DeviceDetail: React.FC<DeviceDetailProps> = ({
                       <div className={css.sliderContainer}>
                         <input
                           className={css.batterySlider}
-                          onChange={e => handleAnswerChange(question.id, question.id, e.target.value, questionType)}
+                          onChange={(e) =>
+                            handleDebouncedChange({
+                              question_id: question.id,
+                              value: e.target.value,
+                              questionType,
+                            })
+                          }
                           type='range'
                           min='0'
                           max='100'
