@@ -107,7 +107,7 @@ const DeviceDetail: React.FC<DeviceDetailProps> = ({
         const selectedVariant = deviceVariants.find(variant => variant.label === newValue);
         if (selectedVariant && newValue) {
           setSelectedDeviceVariant(selectedVariant.id);
-          handleQuestionChange(0, selectedVariant.id, newValue.toString());
+          // handleQuestionChange(0, selectedVariant.id, newValue.toString());
         } else {
           setSelectedDeviceVariant(null);
         }
@@ -453,7 +453,7 @@ const DeviceDetail: React.FC<DeviceDetailProps> = ({
           onClick={() => {
             if (step === 2) {
               setStep(prev => prev - 1);
-              navigate(`/category/${brand}/${model}`);
+              navigate(`/category/${brand}`);
               return;
             }
 

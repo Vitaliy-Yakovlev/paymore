@@ -22,8 +22,6 @@ const DevicePage: React.FC = () => {
   const [questionAnswersIds, setQuestionAnswersIds] = useState<number[]>([]);
   const [deviceSearchTerm, setDeviceSearchTerm] = useState<string>('');
   const [debouncedDeviceSearchTerm, setDebouncedSearchTerm] = useState(deviceSearchTerm);
-  // console.log('🚀 ~ JSON.stringify(questionAnswers, null, 2):', JSON.stringify(questionAnswers, null, 2));
-  // console.log('🚀 ~ JSON.stringify(questionAnswersIds, null, 2):', JSON.stringify(questionAnswersIds, null, 2));
 
   const { categories, loading: loadingCategories } = useCategories();
   const {
@@ -43,7 +41,6 @@ const DevicePage: React.FC = () => {
 
   function handleQuestionChange(questionId: number, answerId: number, value: string): void {
     setQuestionAnswers(prev => ({ ...prev, [questionId]: { answerId, value } }));
-
     setQuestionAnswersIds(prev => {
       const otherAnswers = prev.filter(id => Object(questionAnswers)[questionId]?.answerId !== id);
       return [...otherAnswers, answerId];

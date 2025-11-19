@@ -960,7 +960,7 @@ export default function App() {
           <Routes>
             <Route path='/' element={<Navigate to='/category' replace />} />
             <Route path='/category' element={<HomePage />} />
-            <Route path='/category/:brand/:model?' element={<DevicePage />}>
+            <Route path='/category/:brand' element={<DevicePage />}>
               <Route path=':deviceName' element={<DevicePage />} />
             </Route>
             <Route path='/summary' element={<OfferClaimPage />} />

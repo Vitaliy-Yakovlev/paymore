@@ -33,11 +33,16 @@ export async function getDeviceVariantPrice(
   sale_price = sale_price - category?.shipping_cost;
   data?.forEach(answer => {
     if (answer.weight_type === 'absolute') {
-      sale_price = sale_price - answer.weight;
-    } else if (answer.weight_type === 'percent') {
-      sale_price = (sale_price * answer.weight) / 100;
+      sale_price = Math.round(sale_price - answer.weight);
     }
   });
-  sale_price = (sale_price * category?.total_margin) / 100;
-  return Math.round(sale_price);
+  sale_price = Math.round((sale_price * category?.total_margin) / 100);
+  data?.forEach(answer => {
+    if (answer.weight_type === 'percent') {
+      if (answer.weight !== 100) {
+        sale_price = Math.round((sale_price * answer.weight) / 100);
+      }
+    }
+  });
+  return sale_price;
 }

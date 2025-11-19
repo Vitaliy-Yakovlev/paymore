@@ -11,8 +11,8 @@ const Card: React.FC<CardProps> = ({ category }) => {
   const navigate = useNavigate();
 
   const handleClick = () => {
-    const parts = category.key.split('_');
-    const path = parts.slice(0, 2).join('/').toLowerCase();
+    // const parts = category.key.split('_');
+    const path = category.key.toLowerCase();
 
     navigate(`/category/${path}`, {
       state: {

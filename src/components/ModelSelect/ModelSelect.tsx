@@ -25,11 +25,11 @@ const ModelSelect: React.FC<ModelSelectProps> = ({
 
     const deviceSlug = cleanKey.toLowerCase().replace(/_/g, '-');
     setSelectedDevice(item.id);
-    navigate(`/category/${brand}/${model}/${deviceSlug}`, {
+    navigate(`/category/${brand}/${deviceSlug}`, {
       state: {
         device: item,
         categoryKey: category,
-        path: `/category/${brand}/${model}/${deviceSlug}`,
+        path: `/category/${brand}/${deviceSlug}`,
       },
     });
   };
