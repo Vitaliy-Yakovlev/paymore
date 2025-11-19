@@ -6,8 +6,6 @@ import Button from '../Button';
 import ButtonRadio from '../ButtonRadio';
 import Checkbox from '../Inputs/Checkbox';
 import css from './DeviceDetail.module.css';
-import { QuestionAnswer } from '../../types/questions';
-
 
 interface CategorialQuestionWithAnswers extends CategorialQuestions {
   question_answers: Array<{
@@ -25,6 +23,7 @@ interface DeviceDetailProps {
   deviceVariants: DeviceVariant[];
   setSelectedDeviceVariant: React.Dispatch<React.SetStateAction<number | null>>;
   salePrice: number | 0;
+  finalPriceLoading: boolean;
 }
 
 // Unified state type for all question answers
@@ -43,12 +42,11 @@ const DeviceDetail: React.FC<DeviceDetailProps> = ({
   deviceVariants,
   setSelectedDeviceVariant,
   salePrice,
+  finalPriceLoading
 }) => {
   const navigate = useNavigate();
   const { brand, model } = useParams();
-  const [answer, setAnswer] = useState<QuestionAnswer | null>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
   // Unified state for all question answers
   const [answers, setAnswers] = useState<QuestionAnswersState>({
     storage: currentSelectedDevice?.storage || '',
@@ -328,13 +326,13 @@ const DeviceDetail: React.FC<DeviceDetailProps> = ({
                           type='range'
                           min='0'
                           max='100'
-                          value={Number(answers[`question_${question.id}`]) || 74}
+                          value={Number(answers[`question_${question.id}`]) || 100}
                           style={{
-                            background: `linear-gradient(to right, #45B549 0%, #45B549 ${Number(answers[`question_${question.id}`]) || 74}%, #E0E0E0 ${Number(answers[`question_${question.id}`]) || 74}%, #E0E0E0 100%)`,
+                            background: `linear-gradient(to right, #45B549 0%, #45B549 ${Number(answers[`question_${question.id}`]) || 100}%, #E0E0E0 ${Number(answers[`question_${question.id}`]) || 74}%, #E0E0E0 100%)`,
                           }}
                         />
                       </div>
-                      <p className={css.currentText}>Current: {Number(answers[`question_${question.id}`]) || 74}%</p>
+                      <p className={css.currentText}>Current: {Number(answers[`question_${question.id}`]) || 100}%</p>
                     </div>
                   ) : questionType === 'radio' || questionType === 'single_choice' ? (
                     <div className={css.wrapperBntRadio}>
@@ -479,8 +477,8 @@ const DeviceDetail: React.FC<DeviceDetailProps> = ({
             console.log('Navigating to /summary with salePrice:', salePrice);
             navigate('/summary', { state: { salePrice } });
           }}
-          disabled={!isFormValid()}
-          active={isFormValid()}
+          disabled={!isFormValid() || finalPriceLoading}
+          active={isFormValid() && !finalPriceLoading}
         >
           Continue
           <svg className={'arrow-icon next'} width={17} height={16}>

@@ -52,7 +52,7 @@ export function useDeviceVariants(deviceId: number | null) {
 
 export function useDeviceVariantPrice(categoryId: number | 0, deviceVariantId: number | 0, questionAnswersIds: number[]) {
   const [salePrice, setSalePrice] = useState<number | 0>(0);
-  const [loading, setLoading] = useState(false);
+  const [finalPriceLoading, setFinalPriceLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -60,17 +60,17 @@ export function useDeviceVariantPrice(categoryId: number | 0, deviceVariantId: n
     if (deviceVariantId === 0) return;
 
     try {
-      setLoading(true);
+      setFinalPriceLoading(true);
       getDeviceVariantPrice(categoryId, deviceVariantId, questionAnswersIds).then(data => {
         setSalePrice(data);
-        setLoading(false);
+        setFinalPriceLoading(false);
       });
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
       setError(errorMessage);
-      setLoading(false);
+      setFinalPriceLoading(false);
     }
   }, [categoryId, deviceVariantId, questionAnswersIds]);
 
-  return { salePrice, loading, error };
+  return { salePrice, finalPriceLoading, error };
 }

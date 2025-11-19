@@ -37,7 +37,7 @@ const DevicePage: React.FC = () => {
 
   const {
     salePrice,
-    // loading: loadingFinalPrice,
+    finalPriceLoading: finalPriceLoading,
     // error: finalPriceError,
   } = useDeviceVariantPrice(selectedCategory || 0, selectedDeviceVariant || 0, questionAnswersIds);
 
@@ -102,6 +102,7 @@ const DevicePage: React.FC = () => {
               categorialQuestions={categorialQuestions as any}
               setSelectedDeviceVariant={setSelectedDeviceVariant}
               salePrice={salePrice}
+              finalPriceLoading={finalPriceLoading}
             />
           )}
           {!loadingCategories && !questionsError && step === 1 && (
