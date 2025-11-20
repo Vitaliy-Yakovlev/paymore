@@ -22,8 +22,7 @@ interface DeviceDetailProps {
   categorialQuestions: CategorialQuestionWithAnswers[];
   deviceVariants: DeviceVariant[];
   setSelectedDeviceVariant: React.Dispatch<React.SetStateAction<number | null>>;
-  salePrice: number | 0;
-  finalPriceLoading: boolean;
+  handleOnSubmit: () => Promise<number | void>;
 }
 
 // Unified state type for all question answers
@@ -41,11 +40,10 @@ const DeviceDetail: React.FC<DeviceDetailProps> = ({
   categorialQuestions,
   deviceVariants,
   setSelectedDeviceVariant,
-  salePrice,
-  finalPriceLoading
+  handleOnSubmit
 }) => {
   const navigate = useNavigate();
-  const { brand, model } = useParams();
+  const { brand } = useParams();
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Unified state for all question answers
   const [answers, setAnswers] = useState<QuestionAnswersState>({
@@ -115,6 +113,7 @@ const DeviceDetail: React.FC<DeviceDetailProps> = ({
         newAnswers[`question_${questionId}`] = value;
         getAnswerByValue(Number(value), questionId).then(data => {
           if (data) {
+            console.log("Slider value:", data.id, questionId);
             handleQuestionChange(questionId, data.id, value.toString());
           }
         });
@@ -316,14 +315,19 @@ const DeviceDetail: React.FC<DeviceDetailProps> = ({
                       <div className={css.sliderContainer}>
                         <input
                           className={css.batterySlider}
-                          onChange={(e) =>
+                          type='range'
+                          onChange={(e) => {
+                            const v = Number(e.target.value);
+                            setAnswers((prev) => ({
+                              ...prev,
+                              [`question_${question.id}`]: v,
+                            }));
                             handleDebouncedChange({
                               question_id: question.id,
-                              value: e.target.value,
+                              value: v,
                               questionType,
-                            })
-                          }
-                          type='range'
+                            });
+                          }}
                           min='0'
                           max='100'
                           value={Number(answers[`question_${question.id}`]) || 100}
@@ -468,17 +472,18 @@ const DeviceDetail: React.FC<DeviceDetailProps> = ({
           Go back
         </Button>
         <Button
-          onClick={() => {
+          onClick={async () => {
             if (step === 2) {
               setStep(prev => prev + 1);
               return;
             }
-
-            console.log('Navigating to /summary with salePrice:', salePrice);
-            navigate('/summary', { state: { salePrice } });
+            var price = await handleOnSubmit();
+            console.log('Final price calculated:', price);
+            console.log('Navigating to /summary with salePrice:', price);
+            navigate('/summary', { state: { salePrice: price } });
           }}
-          disabled={!isFormValid() || finalPriceLoading}
-          active={isFormValid() && !finalPriceLoading}
+          disabled={!isFormValid()}
+          active={isFormValid()}
         >
           Continue
           <svg className={'arrow-icon next'} width={17} height={16}>

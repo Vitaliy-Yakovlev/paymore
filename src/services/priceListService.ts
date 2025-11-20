@@ -29,6 +29,7 @@ export async function getDeviceVariantPrice(
     .in('id', questionAnswersIds);
 
   if (error) return 0;
+  
   var sale_price = device_variant?.sale_price;
   sale_price = sale_price - category?.shipping_cost;
   data?.forEach(answer => {

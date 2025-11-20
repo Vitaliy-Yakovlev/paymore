@@ -5,8 +5,9 @@ import ModelSelect from '../components/ModelSelect';
 import DeviceDetail from '../components/DeviceDetail';
 import StepContainer from '../components/StepContainer/StepContainer';
 import { useCategories, useCategorialQuestions } from '../hooks/useCategories';
-import { useDevices, useDeviceVariants, useDeviceVariantPrice } from '../hooks/useDevices';
+import { useDevices, useDeviceVariants } from '../hooks/useDevices';
 import { QuestionAnswersMap } from '../types/questions';
+import { getDeviceVariantPrice } from '../services/priceListService';
 import NotPurchaseDevice from '../components/NotPurchaseDevice';
 
 const DevicePage: React.FC = () => {
@@ -33,18 +34,21 @@ const DevicePage: React.FC = () => {
   const { devices /* loading: loadingDevices */ } = useDevices(debouncedDeviceSearchTerm, selectedCategory);
   const { deviceVariants /* loading: loadingDevicesVariants */ } = useDeviceVariants(selectedDevice);
 
-  const {
-    salePrice,
-    finalPriceLoading: finalPriceLoading,
-    // error: finalPriceError,
-  } = useDeviceVariantPrice(selectedCategory || 0, selectedDeviceVariant || 0, questionAnswersIds);
-
   function handleQuestionChange(questionId: number, answerId: number, value: string): void {
     setQuestionAnswers(prev => ({ ...prev, [questionId]: { answerId, value } }));
     setQuestionAnswersIds(prev => {
       const otherAnswers = prev.filter(id => Object(questionAnswers)[questionId]?.answerId !== id);
       return [...otherAnswers, answerId];
     });
+  }
+
+  async function handleOnSubmit() {
+    var sale_price = await getDeviceVariantPrice(
+      selectedCategory || 0,
+      selectedDeviceVariant || 0,
+      questionAnswersIds
+    )
+    return sale_price;
   }
 
   useEffect(() => {
@@ -98,8 +102,7 @@ const DevicePage: React.FC = () => {
               deviceVariants={deviceVariants}
               categorialQuestions={categorialQuestions as any}
               setSelectedDeviceVariant={setSelectedDeviceVariant}
-              salePrice={salePrice}
-              finalPriceLoading={finalPriceLoading}
+              handleOnSubmit={handleOnSubmit}
             />
           )}
           {!loadingCategories && !questionsError && step === 1 && (
