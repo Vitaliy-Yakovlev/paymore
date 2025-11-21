@@ -43,11 +43,7 @@ const DevicePage: React.FC = () => {
   }
 
   async function handleOnSubmit() {
-    var sale_price = await getDeviceVariantPrice(
-      selectedCategory || 0,
-      selectedDeviceVariant || 0,
-      questionAnswersIds
-    )
+    var sale_price = await getDeviceVariantPrice(selectedCategory || 0, selectedDeviceVariant || 0, questionAnswersIds);
     return sale_price;
   }
 
@@ -119,7 +115,7 @@ const DevicePage: React.FC = () => {
           )}
         </StepContainer>
       )}
-      {!loadingCategories && !questionsError && !step && <NotPurchaseDevice categories={categories} />}
+      {!loadingCategories && !questionsError && !step && <NotPurchaseDevice />}
     </>
   );
 };
