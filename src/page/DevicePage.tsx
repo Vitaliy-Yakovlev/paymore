@@ -48,7 +48,7 @@ const DevicePage: React.FC = () => {
       selectedDeviceVariant || 0,
       questionAnswersIds
     )
-    return sale_price;
+    return { selectedCategory, selectedDevice, selectedDeviceVariant, questionAnswersIds, sale_price, deviceName };
   }
 
   useEffect(() => {
