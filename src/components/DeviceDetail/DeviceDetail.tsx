@@ -22,7 +22,7 @@ interface DeviceDetailProps {
   categorialQuestions: CategorialQuestionWithAnswers[];
   deviceVariants: DeviceVariant[];
   setSelectedDeviceVariant: React.Dispatch<React.SetStateAction<number | null>>;
-  handleOnSubmit: () => Promise<number | void>;
+  handleOnSubmit: () => Promise<{ selectedCategory: number | null; selectedDevice: number | null; selectedDeviceVariant: number | null; questionAnswersIds: number[]; sale_price: number | 0; deviceName: string | undefined }>;
 }
 
 // Unified state type for all question answers
@@ -477,10 +477,17 @@ const DeviceDetail: React.FC<DeviceDetailProps> = ({
               setStep(prev => prev + 1);
               return;
             }
-            var price = await handleOnSubmit();
-            console.log('Final price calculated:', price);
-            console.log('Navigating to /summary with salePrice:', price);
-            navigate('/summary', { state: { salePrice: price } });
+            var { selectedCategory, selectedDevice, selectedDeviceVariant, questionAnswersIds, sale_price, deviceName } = await handleOnSubmit();
+            console.log('Final price calculated:', sale_price);
+            console.log('Navigating to /summary with salePrice:', sale_price);
+            navigate('/summary', { state: { selectedCategoryId: selectedCategory,
+                                            selectedDeviceId: selectedDevice,
+                                            selectedDeviceVariantId: selectedDeviceVariant,
+                                            questionAnswersIds: questionAnswersIds,
+                                            salePrice: sale_price,
+                                            deviceName: deviceName
+                                           } 
+                                  });
           }}
           disabled={!isFormValid()}
           active={isFormValid()}

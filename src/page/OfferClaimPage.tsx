@@ -3,11 +3,20 @@ import { useNavigate, useLocation } from 'react-router';
 import confetti from 'canvas-confetti';
 import Checkbox from '../components/Inputs/Checkbox';
 import Button from '../components/Button';
+import { createQuote } from '../services/quoteService';
 
 const OfferClaimPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const price = location.state?.salePrice || 0;
+  const [name, setName] = useState<string>('');
+  const [email, setEmail] = useState<string>('');
+  const [phone, setPhone] = useState<string>('');
+  const [selectedCategoryId] = useState<number | null>(location.state?.selectedCategoryId || location.state?.categoryId || null);
+  const [selectedDeviceId] = useState<number | null>(location.state?.selectedDeviceId || null);
+  const [selectedDeviceVariantId] =  useState<number | null>(location.state?.selectedDeviceVariantId || null);
+  const [questionAnswersIds] = useState<number | null>(location.state?.questionAnswersIds || null);
+  const [deviceName] = useState<string | null>(location.state?.deviceName || null);
   const [verificationChecked, setVerificationChecked] = useState(false);
   const [timeLeft, setTimeLeft] = useState(20 * 60);
 
@@ -48,6 +57,19 @@ const OfferClaimPage: React.FC = () => {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
+  async function handleOnSubmit() {
+    await createQuote({
+      device_id: selectedDeviceId,
+      device_variant_id: selectedDeviceVariantId,
+      sale_price: price,
+      device_name: deviceName,
+      email: email,
+      phone: phone,
+      name: name,
+      options: {questionAnswersIds: questionAnswersIds}
+    });
+  }
+
   return (
     <div className='wrapper-offer-claim-page'>
       <div className='offer-claim-page'>
@@ -64,14 +86,25 @@ const OfferClaimPage: React.FC = () => {
         <p className='offer-claim-page-expiry'>Hold expires in {formatTime(timeLeft)}</p>
 
         <label className='offer-claim-page-label'>
-          Enter your email to secure this offer
-          <input className='offer-claim-page-input' type='email' placeholder='your@email.com' />
+          Enter your name
+          <input className='offer-claim-page-input' type='text' placeholder='Your Name' value={name}
+            onChange={(e) => setName(e.target.value)} />
+        </label>
+        <label className='offer-claim-page-label'>
+          Enter your email
+          <input className='offer-claim-page-input' type='email' placeholder='your@email.com' value={email}
+            onChange={(e) => setEmail(e.target.value)} />
+        </label>
+        <label className='offer-claim-page-label'>
+          Enter your Phone number
+          <input className='offer-claim-page-input' type='tel' placeholder='(123) 456-7890' value={phone}
+            onChange={(e) => setPhone(e.target.value)} />
         </label>
 
-        <label className='offer-claim-page-label'>
+        {/* <label className='offer-claim-page-label'>
           4 -digit commission / rewards code (optional)
           <input className='offer-claim-page-input' type='number' placeholder='1234' />
-        </label>
+        </label> */}
 
         <div className='wrapper-verification'>
           <Checkbox
@@ -86,7 +119,12 @@ const OfferClaimPage: React.FC = () => {
           />
         </div>
 
-        <Button disabled={!verificationChecked} onClick={() => navigate('/category')} colorButton={'green'}>
+        <Button disabled={!verificationChecked} 
+                onClick={async () => {
+                  await handleOnSubmit();
+                  navigate('/category');
+                }}
+                colorButton={'green'}>
           Claim my cash now
         </Button>
       </div>

@@ -43,8 +43,12 @@ const DevicePage: React.FC = () => {
   }
 
   async function handleOnSubmit() {
-    var sale_price = await getDeviceVariantPrice(selectedCategory || 0, selectedDeviceVariant || 0, questionAnswersIds);
-    return sale_price;
+    var sale_price = await getDeviceVariantPrice(
+      selectedCategory || 0,
+      selectedDeviceVariant || 0,
+      questionAnswersIds
+    )
+    return { selectedCategory, selectedDevice, selectedDeviceVariant, questionAnswersIds, sale_price, deviceName };
   }
 
   useEffect(() => {

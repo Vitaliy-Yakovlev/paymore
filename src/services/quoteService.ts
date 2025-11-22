@@ -8,12 +8,12 @@ export interface Quote {
   sale_price?: number | null;
   email: string;
   phone?: string | null;
+  name?: string | null;
   options?: Record<string, any>; // Optional JSON object
 }
 
 export async function createQuote(payload: Quote) {
   // If JSON not provided, default to empty object
-
   const finalPayload = {
     ...payload,
     options: payload.options ?? {}
